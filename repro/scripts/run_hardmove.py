@@ -145,6 +145,7 @@ def save_trajectory_figure(ttpi, dyn_system, init_state, dt, fig_path, horizon_s
 def select_best_eval(eval_history):
     if not eval_history:
         return None
+
     return max(
         eval_history,
         key=lambda m: (
@@ -154,6 +155,20 @@ def select_best_eval(eval_history):
         ),
     )
 
+def select_best_eval(eval_history):
+    if not eval_history:
+        return None
+    return max(
+        eval_history,
+        key=lambda m: (
+            m.get("success_rate", 0.0),
+            m.get("mu_success", 0.0),
+            -m.get("final_dist_mean", 1e9),
+        ),
+    )
+
+class EarlyStopTraining(Exception):
+    pass
 
 def main():
     parser = argparse.ArgumentParser()
@@ -183,6 +198,10 @@ def main():
     parser.add_argument("--eps-round-v", type=float, default=1e-3)
     parser.add_argument("--eps-round-a", type=float, default=1e-3)
     parser.add_argument("--n-samples", type=int, default=50)
+    parser.add_argument("--early-stop-success", type=float, default=None)
+    parser.add_argument("--early-stop-mu", type=float, default=0.0)
+    parser.add_argument("--early-stop-after-callback", type=int, default=0)
+
 
     args = parser.parse_args()
 
@@ -197,7 +216,13 @@ def main():
     out_dir.mkdir(parents=True, exist_ok=True)
     model_dir.mkdir(parents=True, exist_ok=True)
 
-    task_name = f"HM{args.n_actuator}_state{args.n_state}_action{args.n_action}_seed{args.seed}"
+    task_name = (
+    f"HM{args.n_actuator}"
+    f"_state{args.n_state}"
+    f"_action{args.n_action}"
+    f"_iter{args.n_iter}"
+    f"_seed{args.seed}"
+)
 
     L = 1.0
     position_max = L
@@ -253,6 +278,21 @@ def main():
 
     eval_history = []
 
+    best_eval = {"metrics": None}
+
+    def is_better_metric(new_m, old_m):
+        if old_m is None:
+            return True
+        return (
+            new_m.get("success_rate", 0.0),
+            new_m.get("mu_success", 0.0),
+            -new_m.get("final_dist_mean", 1e9),
+        ) > (
+            old_m.get("success_rate", 0.0),
+            old_m.get("mu_success", 0.0),
+            -old_m.get("final_dist_mean", 1e9),
+        )
+
     def callback(ttpi, state=init_state, callback_count=0):
         metrics = evaluate_policy(
             ttpi=ttpi,
@@ -264,7 +304,25 @@ def main():
         )
         metrics["callback_count"] = int(callback_count)
         eval_history.append(metrics)
+
+        if is_better_metric(metrics, best_eval["metrics"]):
+            best_eval["metrics"] = dict(metrics)
+
         print("[EVAL]", json.dumps(metrics, ensure_ascii=False))
+
+        if (
+            args.early_stop_success is not None
+            and callback_count >= args.early_stop_after_callback
+            and metrics["success_rate"] >= args.early_stop_success
+            and metrics["mu_success"] >= args.early_stop_mu
+        ):
+            print(
+                f"[EARLY_STOP] success_rate={metrics['success_rate']:.4f}, "
+                f"mu_success={metrics['mu_success']:.4f}, "
+                f"callback_count={callback_count}"
+            )
+            raise EarlyStopTraining()
+
         return (
             torch.tensor(metrics["final_reward_mean"]),
             torch.tensor(metrics["cum_reward_mean"]),
@@ -299,15 +357,21 @@ def main():
 
     t0 = time.time()
 
-    ttpi.train(
-        resume=False,
-        n_iter_max=args.n_iter,
-        n_iter_v=args.n_iter_v,
-        callback=callback,
-        callback_freq=args.callback_freq,
-        verbose=False,
-        file_name=str(model_dir / task_name),
-    )
+    stopped_early = False
+
+    try:
+        ttpi.train(
+            resume=False,
+            n_iter_max=args.n_iter,
+            n_iter_v=args.n_iter_v,
+            callback=callback,
+            callback_freq=args.callback_freq,
+            verbose=False,
+            file_name=str(model_dir / task_name),
+        )
+    except EarlyStopTraining:
+        stopped_early = True
+        print("[INFO] training stopped early by evaluation criterion")
 
     train_time_sec = time.time() - t0
 
@@ -335,6 +399,8 @@ def main():
         max_traj=min(args.n_test, 20),
     )
 
+    
+    
     result = {
         "task": f"HM({args.n_actuator})",
         "seed": args.seed,
@@ -370,6 +436,11 @@ def main():
             torch.cuda.max_memory_allocated() / 1e9 if torch.cuda.is_available() else None
         ),
         "trajectory_figure": traj_fig,
+        "best_metrics": best_metrics,
+        "stopped_early": stopped_early,
+        "early_stop_success": args.early_stop_success,
+        "early_stop_mu": args.early_stop_mu,
+        "early_stop_after_callback": args.early_stop_after_callback,
         "best_metrics": best_metrics,
     }
 
