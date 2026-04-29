@@ -1,0 +1,416 @@
+#############################################################################
+Learning begins
+#############################################################################
+Computing reward function in TT format for normalization
+cross device is cuda
+Functions that require cross-approximation can be accelerated with the optional maxvolpy package, which can be installed by 'pip install maxvolpy'. More info is available at https://bitbucket.org/muxas/maxvolpy.
+Cross-approximation over a 20D domain containing 8.1e+21 grid points:
+iter: 0  | eps: 3.064e-01 | time:   0.2387 | largest rank:   1
+iter: 1  | eps: 3.631e-15 | time:   0.5284 | largest rank:  11 <- converged: eps < 0.0001
+Did 113802 function evaluations, which took 0.01561s (7.291e+06 evals/s)
+
+Rank of reward:  tensor([1, 2, 2, 2, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 2, 1])
+Initialize policy (q-fcn) by random initialization of value-function....
+[EVAL] {"success_rate": 0.0, "mu_success": 0.0, "mu_all": 1.0, "final_dist_mean": 0.5639842109597393, "path_len_mean": 0.0, "cum_reward_mean": -3310569364.9361115, "final_reward_mean": -3310569.364936106, "callback_count": 0}
+Memory:  0.008783872 0.268435456
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Policy Iteration 1/20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Number of value updates:  1
+Functions that require cross-approximation can be accelerated with the optional maxvolpy package, which can be installed by 'pip install maxvolpy'. More info is available at https://bitbucket.org/muxas/maxvolpy.
+.....................................................
+Computing Advantage Fcn
+.....................................................
+Functions that require cross-approximation can be accelerated with the optional maxvolpy package, which can be installed by 'pip install maxvolpy'. More info is available at https://bitbucket.org/muxas/maxvolpy.
+v_min: -0.01, v_mean: -0.00, v_max: -0.00
+a_min: -1.00, a_mean: -0.36, a_max: -0.00
+p_min: 2.00, p_mean: 2.64, p_max: 3.00
+Rank of V-model:  tensor([1, 2, 1, 1, 1])
+Rank of A-model:  tensor([1, 3, 3, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
+Rank of P-model:  tensor([1, 5, 5, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 1])
+--------------------------------------------
+Time taken:3.1545886993408203
+--------------------------------------------
+Memory:  0.008715776 0.025165824000000003
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Policy Iteration 2/20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Number of value updates:  1
+Functions that require cross-approximation can be accelerated with the optional maxvolpy package, which can be installed by 'pip install maxvolpy'. More info is available at https://bitbucket.org/muxas/maxvolpy.
+.....................................................
+Computing Advantage Fcn
+.....................................................
+Functions that require cross-approximation can be accelerated with the optional maxvolpy package, which can be installed by 'pip install maxvolpy'. More info is available at https://bitbucket.org/muxas/maxvolpy.
+v_min: -0.02, v_mean: -0.01, v_max: -0.00
+a_min: -1.00, a_mean: -0.36, a_max: -0.00
+p_min: 2.00, p_mean: 2.64, p_max: 3.00
+Rank of V-model:  tensor([1, 2, 1, 1, 1])
+Rank of A-model:  tensor([1, 3, 3, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
+Rank of P-model:  tensor([1, 5, 5, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 1])
+--------------------------------------------
+Time taken:2.576840877532959
+--------------------------------------------
+Memory:  0.008715776 0.025165824000000003
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Policy Iteration 3/20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Number of value updates:  1
+Functions that require cross-approximation can be accelerated with the optional maxvolpy package, which can be installed by 'pip install maxvolpy'. More info is available at https://bitbucket.org/muxas/maxvolpy.
+.....................................................
+Computing Advantage Fcn
+.....................................................
+Functions that require cross-approximation can be accelerated with the optional maxvolpy package, which can be installed by 'pip install maxvolpy'. More info is available at https://bitbucket.org/muxas/maxvolpy.
+v_min: -0.03, v_mean: -0.01, v_max: -0.00
+a_min: -1.00, a_mean: -0.36, a_max: -0.00
+p_min: 2.00, p_mean: 2.64, p_max: 3.00
+Rank of V-model:  tensor([1, 3, 3, 2, 1])
+Rank of A-model:  tensor([1, 3, 3, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
+Rank of P-model:  tensor([1, 5, 5, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 1])
+--------------------------------------------
+Time taken:2.57155442237854
+--------------------------------------------
+Memory:  0.00871936 0.025165824000000003
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Policy Iteration 4/20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Number of value updates:  1
+Functions that require cross-approximation can be accelerated with the optional maxvolpy package, which can be installed by 'pip install maxvolpy'. More info is available at https://bitbucket.org/muxas/maxvolpy.
+.....................................................
+Computing Advantage Fcn
+.....................................................
+Functions that require cross-approximation can be accelerated with the optional maxvolpy package, which can be installed by 'pip install maxvolpy'. More info is available at https://bitbucket.org/muxas/maxvolpy.
+v_min: -0.04, v_mean: -0.01, v_max: -0.00
+a_min: -1.00, a_mean: -0.36, a_max: -0.00
+p_min: 2.00, p_mean: 2.64, p_max: 3.00
+Rank of V-model:  tensor([1, 3, 3, 2, 1])
+Rank of A-model:  tensor([1, 3, 3, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
+Rank of P-model:  tensor([1, 5, 5, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 1])
+--------------------------------------------
+Time taken:2.557713270187378
+--------------------------------------------
+Memory:  0.00871936 0.025165824000000003
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Policy Iteration 5/20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Number of value updates:  1
+Functions that require cross-approximation can be accelerated with the optional maxvolpy package, which can be installed by 'pip install maxvolpy'. More info is available at https://bitbucket.org/muxas/maxvolpy.
+.....................................................
+Computing Advantage Fcn
+.....................................................
+Functions that require cross-approximation can be accelerated with the optional maxvolpy package, which can be installed by 'pip install maxvolpy'. More info is available at https://bitbucket.org/muxas/maxvolpy.
+v_min: -0.05, v_mean: -0.02, v_max: -0.00
+a_min: -1.00, a_mean: -0.36, a_max: -0.00
+p_min: 2.00, p_mean: 2.64, p_max: 3.00
+Rank of V-model:  tensor([1, 3, 3, 2, 1])
+Rank of A-model:  tensor([1, 3, 3, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
+Rank of P-model:  tensor([1, 5, 5, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 1])
+--------------------------------------------
+Time taken:2.6620805263519287
+--------------------------------------------
+---------------Intermeditate Test-------------------------
+[EVAL] {"success_rate": 0.0, "mu_success": 0.0, "mu_all": 1.0, "final_dist_mean": 0.5639842109597393, "path_len_mean": 0.0, "cum_reward_mean": -3310569364.9361115, "final_reward_mean": -3310569.364936106, "callback_count": 4}
+Memory:  0.00871936 0.025165824000000003
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Policy Iteration 6/20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Number of value updates:  1
+Functions that require cross-approximation can be accelerated with the optional maxvolpy package, which can be installed by 'pip install maxvolpy'. More info is available at https://bitbucket.org/muxas/maxvolpy.
+.....................................................
+Computing Advantage Fcn
+.....................................................
+Functions that require cross-approximation can be accelerated with the optional maxvolpy package, which can be installed by 'pip install maxvolpy'. More info is available at https://bitbucket.org/muxas/maxvolpy.
+v_min: -0.06, v_mean: -0.02, v_max: -0.00
+a_min: -1.00, a_mean: -0.36, a_max: -0.00
+p_min: 2.00, p_mean: 2.64, p_max: 3.00
+Rank of V-model:  tensor([1, 3, 3, 2, 1])
+Rank of A-model:  tensor([1, 3, 3, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
+Rank of P-model:  tensor([1, 5, 5, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 1])
+--------------------------------------------
+Time taken:2.8230583667755127
+--------------------------------------------
+Memory:  0.00871936 0.025165824000000003
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Policy Iteration 7/20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Number of value updates:  1
+Functions that require cross-approximation can be accelerated with the optional maxvolpy package, which can be installed by 'pip install maxvolpy'. More info is available at https://bitbucket.org/muxas/maxvolpy.
+.....................................................
+Computing Advantage Fcn
+.....................................................
+Functions that require cross-approximation can be accelerated with the optional maxvolpy package, which can be installed by 'pip install maxvolpy'. More info is available at https://bitbucket.org/muxas/maxvolpy.
+v_min: -0.07, v_mean: -0.02, v_max: -0.00
+a_min: -1.00, a_mean: -0.36, a_max: -0.00
+p_min: 2.00, p_mean: 2.64, p_max: 3.00
+Rank of V-model:  tensor([1, 3, 3, 2, 1])
+Rank of A-model:  tensor([1, 3, 3, 3, 3, 4, 3, 4, 3, 4, 3, 4, 3, 4, 3, 3, 2, 3, 2, 2, 1])
+Rank of P-model:  tensor([1, 5, 5, 5, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 5, 4, 5, 4, 2, 1])
+--------------------------------------------
+Time taken:2.69578218460083
+--------------------------------------------
+Memory:  0.00886528 0.025165824000000003
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Policy Iteration 8/20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Number of value updates:  1
+Functions that require cross-approximation can be accelerated with the optional maxvolpy package, which can be installed by 'pip install maxvolpy'. More info is available at https://bitbucket.org/muxas/maxvolpy.
+.....................................................
+Computing Advantage Fcn
+.....................................................
+Functions that require cross-approximation can be accelerated with the optional maxvolpy package, which can be installed by 'pip install maxvolpy'. More info is available at https://bitbucket.org/muxas/maxvolpy.
+v_min: -0.08, v_mean: -0.03, v_max: -0.00
+a_min: -1.00, a_mean: -0.36, a_max: -0.00
+p_min: 2.00, p_mean: 2.65, p_max: 3.00
+Rank of V-model:  tensor([1, 3, 3, 2, 1])
+Rank of A-model:  tensor([1, 3, 3, 3, 3, 4, 3, 4, 3, 4, 3, 4, 3, 4, 3, 4, 3, 3, 2, 2, 1])
+Rank of P-model:  tensor([1, 5, 5, 5, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 5, 4, 2, 1])
+--------------------------------------------
+Time taken:3.1970174312591553
+--------------------------------------------
+Memory:  0.008876032 0.025165824000000003
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Policy Iteration 9/20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Number of value updates:  1
+Functions that require cross-approximation can be accelerated with the optional maxvolpy package, which can be installed by 'pip install maxvolpy'. More info is available at https://bitbucket.org/muxas/maxvolpy.
+.....................................................
+Computing Advantage Fcn
+.....................................................
+Functions that require cross-approximation can be accelerated with the optional maxvolpy package, which can be installed by 'pip install maxvolpy'. More info is available at https://bitbucket.org/muxas/maxvolpy.
+v_min: -0.09, v_mean: -0.03, v_max: -0.00
+a_min: -1.00, a_mean: -0.36, a_max: -0.00
+p_min: 2.00, p_mean: 2.65, p_max: 3.00
+Rank of V-model:  tensor([1, 3, 3, 2, 1])
+Rank of A-model:  tensor([1, 3, 3, 3, 3, 4, 3, 4, 3, 4, 3, 4, 3, 4, 3, 4, 3, 3, 2, 2, 1])
+Rank of P-model:  tensor([1, 5, 5, 5, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 5, 4, 2, 1])
+--------------------------------------------
+Time taken:3.2224035263061523
+--------------------------------------------
+Memory:  0.008876032 0.025165824000000003
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Policy Iteration 10/20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Number of value updates:  1
+Functions that require cross-approximation can be accelerated with the optional maxvolpy package, which can be installed by 'pip install maxvolpy'. More info is available at https://bitbucket.org/muxas/maxvolpy.
+.....................................................
+Computing Advantage Fcn
+.....................................................
+Functions that require cross-approximation can be accelerated with the optional maxvolpy package, which can be installed by 'pip install maxvolpy'. More info is available at https://bitbucket.org/muxas/maxvolpy.
+v_min: -0.10, v_mean: -0.03, v_max: -0.00
+a_min: -1.00, a_mean: -0.36, a_max: -0.00
+p_min: 2.00, p_mean: 2.65, p_max: 3.00
+Rank of V-model:  tensor([1, 3, 3, 2, 1])
+Rank of A-model:  tensor([1, 3, 3, 3, 3, 4, 3, 4, 3, 4, 3, 4, 3, 4, 3, 4, 3, 3, 2, 2, 1])
+Rank of P-model:  tensor([1, 5, 5, 5, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 5, 4, 2, 1])
+--------------------------------------------
+Time taken:3.0817105770111084
+--------------------------------------------
+---------------Intermeditate Test-------------------------
+[EVAL] {"success_rate": 0.55, "mu_success": 0.9998240438391749, "mu_all": 0.6022725931388817, "final_dist_mean": 0.06213986787753448, "path_len_mean": 1.0509290513092828, "cum_reward_mean": -281823961.2290518, "final_reward_mean": -43248.13942189527, "callback_count": 9}
+Memory:  0.008876032 0.025165824000000003
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Policy Iteration 11/20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Number of value updates:  1
+Functions that require cross-approximation can be accelerated with the optional maxvolpy package, which can be installed by 'pip install maxvolpy'. More info is available at https://bitbucket.org/muxas/maxvolpy.
+.....................................................
+Computing Advantage Fcn
+.....................................................
+Functions that require cross-approximation can be accelerated with the optional maxvolpy package, which can be installed by 'pip install maxvolpy'. More info is available at https://bitbucket.org/muxas/maxvolpy.
+v_min: -0.10, v_mean: -0.04, v_max: -0.00
+a_min: -1.00, a_mean: -0.36, a_max: -0.00
+p_min: 2.00, p_mean: 2.65, p_max: 3.01
+Rank of V-model:  tensor([1, 3, 3, 2, 1])
+Rank of A-model:  tensor([1, 3, 3, 3, 3, 4, 3, 4, 3, 4, 3, 4, 3, 4, 3, 4, 4, 4, 3, 2, 1])
+Rank of P-model:  tensor([1, 5, 5, 5, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 6, 6, 5, 2, 1])
+--------------------------------------------
+Time taken:5.366619825363159
+--------------------------------------------
+Memory:  0.008890368000000001 0.025165824000000003
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Policy Iteration 12/20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Number of value updates:  1
+Functions that require cross-approximation can be accelerated with the optional maxvolpy package, which can be installed by 'pip install maxvolpy'. More info is available at https://bitbucket.org/muxas/maxvolpy.
+.....................................................
+Computing Advantage Fcn
+.....................................................
+Functions that require cross-approximation can be accelerated with the optional maxvolpy package, which can be installed by 'pip install maxvolpy'. More info is available at https://bitbucket.org/muxas/maxvolpy.
+v_min: -0.11, v_mean: -0.04, v_max: -0.00
+a_min: -1.00, a_mean: -0.36, a_max: -0.00
+p_min: 2.00, p_mean: 2.65, p_max: 3.01
+Rank of V-model:  tensor([1, 3, 3, 2, 1])
+Rank of A-model:  tensor([1, 3, 3, 3, 3, 4, 3, 4, 3, 4, 3, 4, 3, 4, 3, 4, 3, 3, 2, 2, 1])
+Rank of P-model:  tensor([1, 5, 5, 5, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 5, 4, 2, 1])
+--------------------------------------------
+Time taken:4.934476375579834
+--------------------------------------------
+Memory:  0.008876032 0.025165824000000003
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Policy Iteration 13/20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Number of value updates:  1
+Functions that require cross-approximation can be accelerated with the optional maxvolpy package, which can be installed by 'pip install maxvolpy'. More info is available at https://bitbucket.org/muxas/maxvolpy.
+.....................................................
+Computing Advantage Fcn
+.....................................................
+Functions that require cross-approximation can be accelerated with the optional maxvolpy package, which can be installed by 'pip install maxvolpy'. More info is available at https://bitbucket.org/muxas/maxvolpy.
+v_min: -0.12, v_mean: -0.04, v_max: -0.00
+a_min: -1.01, a_mean: -0.36, a_max: -0.00
+p_min: 2.00, p_mean: 2.65, p_max: 3.01
+Rank of V-model:  tensor([1, 3, 3, 2, 1])
+Rank of A-model:  tensor([1, 3, 3, 3, 3, 4, 3, 4, 3, 4, 3, 4, 3, 4, 3, 4, 3, 3, 2, 2, 1])
+Rank of P-model:  tensor([1, 5, 5, 5, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 5, 4, 2, 1])
+--------------------------------------------
+Time taken:5.217541694641113
+--------------------------------------------
+Memory:  0.008876032 0.025165824000000003
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Policy Iteration 14/20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Number of value updates:  1
+Functions that require cross-approximation can be accelerated with the optional maxvolpy package, which can be installed by 'pip install maxvolpy'. More info is available at https://bitbucket.org/muxas/maxvolpy.
+.....................................................
+Computing Advantage Fcn
+.....................................................
+Functions that require cross-approximation can be accelerated with the optional maxvolpy package, which can be installed by 'pip install maxvolpy'. More info is available at https://bitbucket.org/muxas/maxvolpy.
+v_min: -0.13, v_mean: -0.05, v_max: -0.00
+a_min: -1.01, a_mean: -0.36, a_max: -0.00
+p_min: 2.01, p_mean: 2.66, p_max: 3.01
+Rank of V-model:  tensor([1, 3, 3, 2, 1])
+Rank of A-model:  tensor([1, 3, 3, 3, 3, 4, 3, 4, 3, 4, 3, 4, 3, 4, 3, 4, 3, 3, 2, 2, 1])
+Rank of P-model:  tensor([1, 5, 5, 5, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 5, 4, 2, 1])
+--------------------------------------------
+Time taken:4.931082487106323
+--------------------------------------------
+Memory:  0.008876032 0.025165824000000003
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Policy Iteration 15/20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Number of value updates:  1
+Functions that require cross-approximation can be accelerated with the optional maxvolpy package, which can be installed by 'pip install maxvolpy'. More info is available at https://bitbucket.org/muxas/maxvolpy.
+.....................................................
+Computing Advantage Fcn
+.....................................................
+Functions that require cross-approximation can be accelerated with the optional maxvolpy package, which can be installed by 'pip install maxvolpy'. More info is available at https://bitbucket.org/muxas/maxvolpy.
+v_min: -0.14, v_mean: -0.05, v_max: -0.00
+a_min: -1.01, a_mean: -0.36, a_max: -0.00
+p_min: 2.01, p_mean: 2.66, p_max: 3.02
+Rank of V-model:  tensor([1, 3, 3, 2, 1])
+Rank of A-model:  tensor([1, 3, 4, 4, 3, 4, 3, 4, 3, 4, 3, 4, 3, 4, 3, 4, 3, 3, 2, 2, 1])
+Rank of P-model:  tensor([1, 5, 6, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 5, 4, 2, 1])
+--------------------------------------------
+Time taken:4.910806655883789
+--------------------------------------------
+---------------Intermeditate Test-------------------------
+[EVAL] {"success_rate": 0.75, "mu_success": 0.9913321288510363, "mu_all": 0.7871932104674108, "final_dist_mean": 0.05249040303429175, "path_len_mean": 0.7321879910237926, "cum_reward_mean": -268245788.19839633, "final_reward_mean": -42720.96130285359, "callback_count": 14}
+Memory:  0.008889856 0.025165824000000003
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Policy Iteration 16/20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Number of value updates:  1
+Functions that require cross-approximation can be accelerated with the optional maxvolpy package, which can be installed by 'pip install maxvolpy'. More info is available at https://bitbucket.org/muxas/maxvolpy.
+.....................................................
+Computing Advantage Fcn
+.....................................................
+Functions that require cross-approximation can be accelerated with the optional maxvolpy package, which can be installed by 'pip install maxvolpy'. More info is available at https://bitbucket.org/muxas/maxvolpy.
+v_min: -0.15, v_mean: -0.05, v_max: -0.00
+a_min: -1.01, a_mean: -0.36, a_max: -0.00
+p_min: 2.01, p_mean: 2.66, p_max: 3.02
+Rank of V-model:  tensor([1, 3, 3, 2, 1])
+Rank of A-model:  tensor([1, 3, 5, 4, 3, 4, 3, 4, 3, 4, 3, 4, 3, 4, 3, 4, 3, 3, 2, 2, 1])
+Rank of P-model:  tensor([1, 5, 7, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 5, 4, 2, 1])
+--------------------------------------------
+Time taken:4.977201700210571
+--------------------------------------------
+Memory:  0.008897024 0.025165824000000003
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Policy Iteration 17/20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Number of value updates:  1
+Functions that require cross-approximation can be accelerated with the optional maxvolpy package, which can be installed by 'pip install maxvolpy'. More info is available at https://bitbucket.org/muxas/maxvolpy.
+.....................................................
+Computing Advantage Fcn
+.....................................................
+Functions that require cross-approximation can be accelerated with the optional maxvolpy package, which can be installed by 'pip install maxvolpy'. More info is available at https://bitbucket.org/muxas/maxvolpy.
+v_min: -0.16, v_mean: -0.06, v_max: -0.00
+a_min: -1.01, a_mean: -0.36, a_max: -0.00
+p_min: 2.01, p_mean: 2.66, p_max: 3.02
+Rank of V-model:  tensor([1, 3, 3, 2, 1])
+Rank of A-model:  tensor([1, 4, 5, 4, 3, 4, 3, 4, 3, 4, 3, 4, 3, 4, 3, 4, 3, 3, 2, 2, 1])
+Rank of P-model:  tensor([1, 6, 7, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 5, 4, 2, 1])
+--------------------------------------------
+Time taken:4.793328285217285
+--------------------------------------------
+Memory:  0.00890112 0.025165824000000003
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Policy Iteration 18/20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Number of value updates:  1
+Functions that require cross-approximation can be accelerated with the optional maxvolpy package, which can be installed by 'pip install maxvolpy'. More info is available at https://bitbucket.org/muxas/maxvolpy.
+.....................................................
+Computing Advantage Fcn
+.....................................................
+Functions that require cross-approximation can be accelerated with the optional maxvolpy package, which can be installed by 'pip install maxvolpy'. More info is available at https://bitbucket.org/muxas/maxvolpy.
+v_min: -0.17, v_mean: -0.06, v_max: -0.00
+a_min: -1.01, a_mean: -0.36, a_max: -0.00
+p_min: 2.01, p_mean: 2.66, p_max: 3.02
+Rank of V-model:  tensor([1, 3, 3, 2, 1])
+Rank of A-model:  tensor([1, 4, 5, 4, 3, 4, 3, 4, 3, 4, 3, 4, 3, 4, 4, 5, 4, 4, 3, 2, 1])
+Rank of P-model:  tensor([1, 6, 7, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 6, 7, 6, 6, 5, 2, 1])
+--------------------------------------------
+Time taken:4.627119302749634
+--------------------------------------------
+Memory:  0.008928768 0.025165824000000003
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Policy Iteration 19/20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Number of value updates:  1
+Functions that require cross-approximation can be accelerated with the optional maxvolpy package, which can be installed by 'pip install maxvolpy'. More info is available at https://bitbucket.org/muxas/maxvolpy.
+.....................................................
+Computing Advantage Fcn
+.....................................................
+Functions that require cross-approximation can be accelerated with the optional maxvolpy package, which can be installed by 'pip install maxvolpy'. More info is available at https://bitbucket.org/muxas/maxvolpy.
+v_min: -0.17, v_mean: -0.06, v_max: -0.00
+a_min: -1.01, a_mean: -0.36, a_max: -0.00
+p_min: 2.01, p_mean: 2.67, p_max: 3.02
+Rank of V-model:  tensor([1, 3, 3, 2, 1])
+Rank of A-model:  tensor([1, 4, 5, 4, 3, 4, 3, 4, 3, 4, 3, 4, 3, 4, 3, 4, 4, 4, 3, 2, 1])
+Rank of P-model:  tensor([1, 6, 7, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 6, 6, 5, 2, 1])
+--------------------------------------------
+Time taken:4.735184907913208
+--------------------------------------------
+Memory:  0.008915456 0.025165824000000003
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Policy Iteration 20/20
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Number of value updates:  1
+Functions that require cross-approximation can be accelerated with the optional maxvolpy package, which can be installed by 'pip install maxvolpy'. More info is available at https://bitbucket.org/muxas/maxvolpy.
+.....................................................
+Computing Advantage Fcn
+.....................................................
+Functions that require cross-approximation can be accelerated with the optional maxvolpy package, which can be installed by 'pip install maxvolpy'. More info is available at https://bitbucket.org/muxas/maxvolpy.
+v_min: -0.18, v_mean: -0.06, v_max: -0.00
+a_min: -1.01, a_mean: -0.36, a_max: -0.00
+p_min: 2.01, p_mean: 2.67, p_max: 3.03
+Rank of V-model:  tensor([1, 3, 3, 2, 1])
+Rank of A-model:  tensor([1, 4, 5, 4, 3, 4, 3, 4, 4, 5, 4, 5, 4, 5, 4, 5, 4, 4, 3, 2, 1])
+Rank of P-model:  tensor([1, 6, 7, 6, 5, 6, 5, 6, 6, 7, 6, 7, 6, 7, 6, 7, 6, 6, 5, 2, 1])
+--------------------------------------------
+Time taken:4.991402864456177
+--------------------------------------------
+---------------Intermeditate Test-------------------------
+[EVAL] {"success_rate": 0.6000000000000001, "mu_success": 0.880305950929098, "mu_all": 0.5709831425347822, "final_dist_mean": 0.06586020447067277, "path_len_mean": 1.0465352718321164, "cum_reward_mean": -286404168.08769244, "final_reward_mean": -62130.03205059678, "callback_count": 19}
+[DONE] saved result to /home/s110/code/ttpi_iclr/repro/results/HM8_state30_action50_seed0.json
+{
+  "success_rate": 0.6000000000000001,
+  "mu_success": 0.880305950929098,
+  "mu_all": 0.5709831425347822,
+  "final_dist_mean": 0.06586020447067277,
+  "path_len_mean": 1.0465352718321164,
+  "cum_reward_mean": -286404168.08769244,
+  "final_reward_mean": -62130.03205059678
+}
+Traceback (most recent call last):
+  File "/home/s110/code/ttpi_iclr/repro/scripts/run_hardmove.py", line 311, in <module>
+    PY
+NameError: name 'PY' is not defined

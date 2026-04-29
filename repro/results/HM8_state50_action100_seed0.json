@@ -1,0 +1,153 @@
+{
+  "task": "HM(8)",
+  "seed": 0,
+  "n_state": 50,
+  "n_action": 100,
+  "n_actuator": 8,
+  "action_dim": 16,
+  "dt": 0.01,
+  "gamma": 0.99,
+  "n_iter": 100,
+  "n_iter_v": 1,
+  "n_test": 100,
+  "target_radius": 0.02,
+  "max_batch_v": 10000,
+  "max_batch_a": 100000,
+  "nswp_v": 5,
+  "nswp_a": 10,
+  "rmax_v": 100,
+  "rmax_a": 100,
+  "eps_cross_v": 0.001,
+  "eps_cross_a": 0.001,
+  "eps_round_v": 0.001,
+  "eps_round_a": 0.001,
+  "n_samples": 50,
+  "train_time_sec": 2004.7450902462006,
+  "final_metrics": {
+    "success_rate": 0.21,
+    "mu_success": 0.8235232882575323,
+    "mu_all": 0.4577200230945067,
+    "final_dist_mean": 0.07791753999862847,
+    "path_len_mean": 0.8882101882079106,
+    "cum_reward_mean": -280046332.41255033,
+    "final_reward_mean": -62583.768235209514
+  },
+  "eval_history": [
+    {
+      "success_rate": 0.0,
+      "mu_success": 0.0,
+      "mu_all": 1.0,
+      "final_dist_mean": 0.5566968557106781,
+      "path_len_mean": 0.0,
+      "cum_reward_mean": -3300312150.3882656,
+      "final_reward_mean": -3300312.1503882683,
+      "callback_count": 0
+    },
+    {
+      "success_rate": 0.87,
+      "mu_success": 0.6807283177039816,
+      "mu_all": 0.6037827892425918,
+      "final_dist_mean": 0.043978139939793784,
+      "path_len_mean": 0.9050695990977613,
+      "cum_reward_mean": -265512965.06698933,
+      "final_reward_mean": -26327.189272958698,
+      "callback_count": 9
+    },
+    {
+      "success_rate": 0.8,
+      "mu_success": 0.8727886336486744,
+      "mu_all": 0.7308777878229878,
+      "final_dist_mean": 0.04383224897415073,
+      "path_len_mean": 0.7665403050177386,
+      "cum_reward_mean": -260803507.86072937,
+      "final_reward_mean": -36576.01376787018,
+      "callback_count": 19
+    },
+    {
+      "success_rate": 0.62,
+      "mu_success": 0.7181966327512336,
+      "mu_all": 0.5099914957318059,
+      "final_dist_mean": 0.040986073081339836,
+      "path_len_mean": 0.9605860108857229,
+      "cum_reward_mean": -260364009.80558664,
+      "final_reward_mean": -36698.960507824384,
+      "callback_count": 29
+    },
+    {
+      "success_rate": 0.39,
+      "mu_success": 0.8002931147803456,
+      "mu_all": 0.4395425373186025,
+      "final_dist_mean": 0.05849550070445158,
+      "path_len_mean": 1.0101981437756775,
+      "cum_reward_mean": -261525993.0854427,
+      "final_reward_mean": -34280.01420881764,
+      "callback_count": 39
+    },
+    {
+      "success_rate": 0.37,
+      "mu_success": 0.8599616235550286,
+      "mu_all": 0.5972025542772826,
+      "final_dist_mean": 0.0600145323056468,
+      "path_len_mean": 0.7455991825446278,
+      "cum_reward_mean": -271423227.04684174,
+      "final_reward_mean": -36331.86306395983,
+      "callback_count": 49
+    },
+    {
+      "success_rate": 0.27,
+      "mu_success": 0.9839131212427699,
+      "mu_all": 0.616640845266636,
+      "final_dist_mean": 0.07306591004506145,
+      "path_len_mean": 0.7242194908423077,
+      "cum_reward_mean": -293946327.9517904,
+      "final_reward_mean": -54332.087546106224,
+      "callback_count": 59
+    },
+    {
+      "success_rate": 0.25,
+      "mu_success": 0.8536697402986666,
+      "mu_all": 0.5388863441776024,
+      "final_dist_mean": 0.08425104845689546,
+      "path_len_mean": 0.7839296415453455,
+      "cum_reward_mean": -328120939.68268406,
+      "final_reward_mean": -73089.0735903499,
+      "callback_count": 69
+    },
+    {
+      "success_rate": 0.18,
+      "mu_success": 0.9938869838212656,
+      "mu_all": 0.5690512004033011,
+      "final_dist_mean": 0.08366445988947158,
+      "path_len_mean": 0.7769797798651017,
+      "cum_reward_mean": -309521478.910343,
+      "final_reward_mean": -70831.42538436374,
+      "callback_count": 79
+    },
+    {
+      "success_rate": 0.25,
+      "mu_success": 0.9743754606653963,
+      "mu_all": 0.5582041780086844,
+      "final_dist_mean": 0.07224557121264097,
+      "path_len_mean": 0.7962682438445774,
+      "cum_reward_mean": -309428724.42149985,
+      "final_reward_mean": -52308.72644443231,
+      "callback_count": 89
+    },
+    {
+      "success_rate": 0.21,
+      "mu_success": 0.8235232882575323,
+      "mu_all": 0.4577200230945067,
+      "final_dist_mean": 0.07791753999862847,
+      "path_len_mean": 0.8882101882079106,
+      "cum_reward_mean": -280046332.41255033,
+      "final_reward_mean": -62583.768235209514,
+      "callback_count": 99
+    }
+  ],
+  "torch_version": "2.11.0.dev20260130+cu128",
+  "torch_cuda": "12.8",
+  "cuda_available": true,
+  "gpu": "NVIDIA GeForce RTX 5080",
+  "max_cuda_mem_gb": 13.410201088,
+  "trajectory_figure": "/home/s110/code/ttpi_iclr/repro/figures/hardmove/HM8_state50_action100_seed0_traj.png"
+}

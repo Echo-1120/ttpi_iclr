@@ -151,7 +151,11 @@ class TTPI:
                 self.reward_max = 1.0
             else:
                 self.reward_max = torch.abs(self.get_max_a(self.reward_tt)[0])
-            self.reward_normalized_tt = self.reward_tt*(1/self.reward_max)
+            # tntorch scalar multiplication expects a Python/CPU scalar, not a CUDA tensor
+            reward_max_scalar = self.reward_max
+            if torch.is_tensor(reward_max_scalar):
+                reward_max_scalar = reward_max_scalar.detach().cpu().item()
+            self.reward_normalized_tt = self.reward_tt * (1.0 / float(reward_max_scalar))
             self.reward_normalized_tt.round(1e-9)
             self.reward_normalized_tt = self.reward_normalized_tt.to(self.device)
             print("Initialize policy (q-fcn) by random initialization of value-function....")
@@ -747,7 +751,7 @@ class TTPI:
             axs[int(count/n_col), count%n_col].grid()
             count+=1
             
-        plt.show()
+        plt.close('all')  # disabled blocking plot window for batch reproduction
 
     def log_data(self):
         self.v_min, self.v_max = self.get_tt_bounds_v(self.v_model.clone())
