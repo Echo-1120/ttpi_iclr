@@ -1,0 +1,156 @@
+{
+  "note": "LaX is an evaluation-time local action expansion. DPRP is validation-aware dynamic TT rounding; paper claims require paper-budget runs, not smoke runs.",
+  "results": [
+    {
+      "case": {
+        "n_act": 8,
+        "seed": 0,
+        "ns": 30,
+        "na": 25,
+        "n_iter": 30,
+        "callback_freq": 10,
+        "n_test": 50,
+        "horizon": 1000,
+        "rmax": 60,
+        "nswp_v": 5,
+        "nswp_a": 10,
+        "kickrank": 10,
+        "max_batch_v": 5000,
+        "max_batch_a": 20000,
+        "n_samples": 50,
+        "dprp_val_points": 512,
+        "dprp_target_avg_rank": 8.0,
+        "dprp_tol": 0.05,
+        "name": "local_lax",
+        "order": "Local",
+        "dprp": false
+      },
+      "status": "OK",
+      "time_s": 163.75283861160278,
+      "peak_gb": 1.591328768,
+      "best_no_lax": {
+        "S": 0.7199999690055847,
+        "mu": 0.8745355587233551,
+        "S_mu": 0.6296655751750974,
+        "lax_extra_gb": 0.000400384,
+        "cb": 9
+      },
+      "best_lax": {
+        "S": 0.6599999666213989,
+        "mu": 0.932555829971017,
+        "S_mu": 0.6154868166534623,
+        "lax_extra_gb": 6.656e-06,
+        "cb": 9
+      },
+      "final_Ar_avg": 6.105263157894737,
+      "final_Ar_max": 9,
+      "final_Pr_avg": 8.0,
+      "final_Pr_max": 11,
+      "eval_history": [
+        {
+          "no_lax": {
+            "S": 0.0,
+            "mu": 0.0,
+            "S_mu": 0.0,
+            "lax_extra_gb": 0.000400384,
+            "cb": 0
+          },
+          "lax": {
+            "S": 0.0,
+            "mu": 0.0,
+            "S_mu": 0.0,
+            "lax_extra_gb": 6.656e-06,
+            "cb": 0
+          }
+        },
+        {
+          "no_lax": {
+            "S": 0.7199999690055847,
+            "mu": 0.8745355587233551,
+            "S_mu": 0.6296655751750974,
+            "lax_extra_gb": 0.000400384,
+            "cb": 9
+          },
+          "lax": {
+            "S": 0.6599999666213989,
+            "mu": 0.932555829971017,
+            "S_mu": 0.6154868166534623,
+            "lax_extra_gb": 6.656e-06,
+            "cb": 9
+          }
+        },
+        {
+          "no_lax": {
+            "S": 0.4599999785423279,
+            "mu": 0.9126342539437526,
+            "S_mu": 0.41981173723111964,
+            "lax_extra_gb": 0.000400384,
+            "cb": 19
+          },
+          "lax": {
+            "S": 0.5999999642372131,
+            "mu": 0.9254912104816985,
+            "S_mu": 0.5552946931908742,
+            "lax_extra_gb": 6.656e-06,
+            "cb": 19
+          }
+        },
+        {
+          "no_lax": {
+            "S": 0.3999999761581421,
+            "mu": 0.9395947755094046,
+            "S_mu": 0.3758378878020767,
+            "lax_extra_gb": 0.000400384,
+            "cb": 29
+          },
+          "lax": {
+            "S": 0.47999998927116394,
+            "mu": 0.9468554347926699,
+            "S_mu": 0.45449059854182483,
+            "lax_extra_gb": 6.656e-06,
+            "cb": 29
+          }
+        }
+      ],
+      "rank_history": [
+        {
+          "cb": 0,
+          "Vr_avg": 1.0,
+          "Vr_max": 1,
+          "Ar_avg": 2.3684210526315788,
+          "Ar_max": 3,
+          "Pr_avg": 4.2631578947368425,
+          "Pr_max": 5
+        },
+        {
+          "cb": 9,
+          "Vr_avg": 2.6666666666666665,
+          "Vr_max": 3,
+          "Ar_avg": 3.210526315789474,
+          "Ar_max": 4,
+          "Pr_avg": 5.105263157894737,
+          "Pr_max": 6
+        },
+        {
+          "cb": 19,
+          "Vr_avg": 2.6666666666666665,
+          "Vr_max": 3,
+          "Ar_avg": 3.4210526315789473,
+          "Ar_max": 5,
+          "Pr_avg": 5.315789473684211,
+          "Pr_max": 7
+        },
+        {
+          "cb": 29,
+          "Vr_avg": 2.6666666666666665,
+          "Vr_max": 3,
+          "Ar_avg": 6.105263157894737,
+          "Ar_max": 9,
+          "Pr_avg": 8.0,
+          "Pr_max": 11
+        }
+      ],
+      "dprp_events": []
+    }
+  ]
+}

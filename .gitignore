@@ -1,0 +1,23 @@
+# Python/runtime cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.log~
+
+# Local IDE/runtime noise
+.idea/workspace.xml
+.idea/shelf/
+.DS_Store
+
+# Large or generated experiment artifacts
+repro/logs/
+repro/models/
+repro/archive/
+
+# Ad-hoc model/checkpoint outputs
+*.pt
+*.pth
+ttdp_model.pt
+
+# Local paper/source copies
+9245_Generalized_Policy_Iterat.pdf

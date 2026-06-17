@@ -1,0 +1,529 @@
+{
+  "source": "PointMassVelocity.ipynb",
+  "note": "Baselines are deterministic controls added for this reproduction; the ICLR paper does not report a formal PointMassVelocity baseline table.",
+  "config": {
+    "preset": "notebook",
+    "methods": "ttpi,straight,potential,random,zero",
+    "seed": 0,
+    "device": "cuda",
+    "output_stem": "pointmass_velocity_notebook_seed0",
+    "n_state": 50,
+    "n_action": 50,
+    "n_iter": 200,
+    "callback_freq": 20,
+    "horizon": 10.0,
+    "dt": 0.01,
+    "target_radius": 0.02,
+    "gamma": 0.99,
+    "max_batch_v": 10000,
+    "max_batch_a": 100000,
+    "nswp_v": 10,
+    "nswp_a": 10,
+    "rmax_v": 100,
+    "rmax_a": 100,
+    "kickrank_v": 5,
+    "kickrank_a": 10,
+    "eps_cross_v": 0.001,
+    "eps_cross_a": 0.001,
+    "eps_round_v": 0.001,
+    "eps_round_a": 0.001,
+    "n_samples": 50
+  },
+  "obstacle": {
+    "center": [
+      0.0,
+      -0.4
+    ],
+    "radius": 0.2
+  },
+  "results": {
+    "ttpi": {
+      "method": "ttpi",
+      "status": "OK",
+      "time_s": 175.04492449760437,
+      "peak_gb": 0.735797248,
+      "best_eval": {
+        "success_rate": 0.9,
+        "mu_success": 0.9601588011906548,
+        "tradeoff_score": 0.8641429210715893,
+        "collision_rate": 0.0,
+        "final_dist_mean": 0.03399441035606814,
+        "path_len_mean": 0.6834622891708874,
+        "cum_reward_mean": -200637.39213321937,
+        "final_reward_mean": -37.96320394692139,
+        "cb": 199
+      },
+      "final_eval": {
+        "success_rate": 0.9,
+        "mu_success": 0.9601588011906548,
+        "tradeoff_score": 0.8641429210715893,
+        "collision_rate": 0.0,
+        "final_dist_mean": 0.03399441035606814,
+        "path_len_mean": 0.6834622891708874,
+        "cum_reward_mean": -200637.39213321937,
+        "final_reward_mean": -37.96320394692139
+      },
+      "eval_history": [
+        {
+          "success_rate": 0.03333333333333333,
+          "mu_success": 0.0,
+          "tradeoff_score": 0.0,
+          "collision_rate": 0.0,
+          "final_dist_mean": 0.7170560606770889,
+          "path_len_mean": 0.0697510332013423,
+          "cum_reward_mean": -716456.0261385593,
+          "final_reward_mean": -720.6539306682954,
+          "cb": 0
+        },
+        {
+          "success_rate": 0.03333333333333333,
+          "mu_success": 0.0,
+          "tradeoff_score": 0.0,
+          "collision_rate": 0.0,
+          "final_dist_mean": 0.6485879688796604,
+          "path_len_mean": 0.06975103320133966,
+          "cum_reward_mean": -682554.6477982796,
+          "final_reward_mean": -652.2584986310166,
+          "cb": 19
+        },
+        {
+          "success_rate": 0.03333333333333333,
+          "mu_success": 0.0,
+          "tradeoff_score": 0.0,
+          "collision_rate": 0.0,
+          "final_dist_mean": 0.5971333329599742,
+          "path_len_mean": 0.11526015770651056,
+          "cum_reward_mean": -658440.8913959225,
+          "final_reward_mean": -602.7802675337024,
+          "cb": 39
+        },
+        {
+          "success_rate": 0.03333333333333333,
+          "mu_success": 0.0,
+          "tradeoff_score": 0.0,
+          "collision_rate": 0.0,
+          "final_dist_mean": 0.49686454844008887,
+          "path_len_mean": 0.21556265152810886,
+          "cum_reward_mean": -609572.8698307517,
+          "final_reward_mean": -505.41825452263504,
+          "cb": 59
+        },
+        {
+          "success_rate": 0.2,
+          "mu_success": 0.8333333333333333,
+          "tradeoff_score": 0.16666666666666666,
+          "collision_rate": 0.0,
+          "final_dist_mean": 0.12422533004610974,
+          "path_len_mean": 0.5921082278198452,
+          "cum_reward_mean": -265691.9651538745,
+          "final_reward_mean": -128.38541749781058,
+          "cb": 79
+        },
+        {
+          "success_rate": 0.8666666666666667,
+          "mu_success": 0.9615384615384616,
+          "tradeoff_score": 0.8333333333333334,
+          "collision_rate": 0.0,
+          "final_dist_mean": 0.09073942891393735,
+          "path_len_mean": 0.6206397959420246,
+          "cum_reward_mean": -219668.0407332784,
+          "final_reward_mean": -94.55669364426716,
+          "cb": 99
+        },
+        {
+          "success_rate": 0.8666666666666667,
+          "mu_success": 0.9615384615384616,
+          "tradeoff_score": 0.8333333333333334,
+          "collision_rate": 0.0,
+          "final_dist_mean": 0.07042484953442939,
+          "path_len_mean": 0.6395300290923726,
+          "cum_reward_mean": -212654.20165574847,
+          "final_reward_mean": -74.08614217669798,
+          "cb": 119
+        },
+        {
+          "success_rate": 0.8666666666666667,
+          "mu_success": 0.9615384615384616,
+          "tradeoff_score": 0.8333333333333334,
+          "collision_rate": 0.0,
+          "final_dist_mean": 0.07051486388959365,
+          "path_len_mean": 0.6405536141973003,
+          "cum_reward_mean": -208788.26200695123,
+          "final_reward_mean": -74.17952962404227,
+          "cb": 139
+        },
+        {
+          "success_rate": 0.9,
+          "mu_success": 0.959927565148491,
+          "tradeoff_score": 0.8639348086336419,
+          "collision_rate": 0.0,
+          "final_dist_mean": 0.07038367537059712,
+          "path_len_mean": 0.6412570839168961,
+          "cum_reward_mean": -204662.32728113918,
+          "final_reward_mean": -74.0445533572183,
+          "cb": 159
+        },
+        {
+          "success_rate": 0.9,
+          "mu_success": 0.9601165879306695,
+          "tradeoff_score": 0.8641049291376025,
+          "collision_rate": 0.0,
+          "final_dist_mean": 0.06842411369899369,
+          "path_len_mean": 0.64233511292353,
+          "cum_reward_mean": -202727.5343174025,
+          "final_reward_mean": -72.39159524686332,
+          "cb": 179
+        },
+        {
+          "success_rate": 0.9,
+          "mu_success": 0.9601588011906548,
+          "tradeoff_score": 0.8641429210715893,
+          "collision_rate": 0.0,
+          "final_dist_mean": 0.03399441035606814,
+          "path_len_mean": 0.6834622891708874,
+          "cum_reward_mean": -200637.39213321937,
+          "final_reward_mean": -37.96320394692139,
+          "cb": 199
+        }
+      ],
+      "rank_history": [
+        {
+          "cb": 0,
+          "Vr_max": 1,
+          "Ar_max": 9,
+          "Pr_max": 11,
+          "Vr": [
+            1,
+            1,
+            1
+          ],
+          "Ar": [
+            1,
+            9,
+            2,
+            4,
+            1
+          ],
+          "Pr": [
+            1,
+            11,
+            4,
+            6,
+            1
+          ]
+        },
+        {
+          "cb": 19,
+          "Vr_max": 6,
+          "Ar_max": 14,
+          "Pr_max": 16,
+          "Vr": [
+            1,
+            6,
+            1
+          ],
+          "Ar": [
+            1,
+            14,
+            5,
+            4,
+            1
+          ],
+          "Pr": [
+            1,
+            16,
+            7,
+            6,
+            1
+          ]
+        },
+        {
+          "cb": 39,
+          "Vr_max": 6,
+          "Ar_max": 15,
+          "Pr_max": 17,
+          "Vr": [
+            1,
+            6,
+            1
+          ],
+          "Ar": [
+            1,
+            15,
+            6,
+            4,
+            1
+          ],
+          "Pr": [
+            1,
+            17,
+            8,
+            6,
+            1
+          ]
+        },
+        {
+          "cb": 59,
+          "Vr_max": 5,
+          "Ar_max": 14,
+          "Pr_max": 16,
+          "Vr": [
+            1,
+            5,
+            1
+          ],
+          "Ar": [
+            1,
+            14,
+            6,
+            4,
+            1
+          ],
+          "Pr": [
+            1,
+            16,
+            8,
+            6,
+            1
+          ]
+        },
+        {
+          "cb": 79,
+          "Vr_max": 5,
+          "Ar_max": 14,
+          "Pr_max": 16,
+          "Vr": [
+            1,
+            5,
+            1
+          ],
+          "Ar": [
+            1,
+            14,
+            6,
+            4,
+            1
+          ],
+          "Pr": [
+            1,
+            16,
+            8,
+            6,
+            1
+          ]
+        },
+        {
+          "cb": 99,
+          "Vr_max": 5,
+          "Ar_max": 14,
+          "Pr_max": 16,
+          "Vr": [
+            1,
+            5,
+            1
+          ],
+          "Ar": [
+            1,
+            14,
+            6,
+            4,
+            1
+          ],
+          "Pr": [
+            1,
+            16,
+            8,
+            6,
+            1
+          ]
+        },
+        {
+          "cb": 119,
+          "Vr_max": 5,
+          "Ar_max": 14,
+          "Pr_max": 16,
+          "Vr": [
+            1,
+            5,
+            1
+          ],
+          "Ar": [
+            1,
+            14,
+            6,
+            4,
+            1
+          ],
+          "Pr": [
+            1,
+            16,
+            8,
+            6,
+            1
+          ]
+        },
+        {
+          "cb": 139,
+          "Vr_max": 4,
+          "Ar_max": 13,
+          "Pr_max": 15,
+          "Vr": [
+            1,
+            4,
+            1
+          ],
+          "Ar": [
+            1,
+            13,
+            6,
+            4,
+            1
+          ],
+          "Pr": [
+            1,
+            15,
+            8,
+            6,
+            1
+          ]
+        },
+        {
+          "cb": 159,
+          "Vr_max": 4,
+          "Ar_max": 13,
+          "Pr_max": 15,
+          "Vr": [
+            1,
+            4,
+            1
+          ],
+          "Ar": [
+            1,
+            13,
+            6,
+            4,
+            1
+          ],
+          "Pr": [
+            1,
+            15,
+            8,
+            6,
+            1
+          ]
+        },
+        {
+          "cb": 179,
+          "Vr_max": 4,
+          "Ar_max": 13,
+          "Pr_max": 15,
+          "Vr": [
+            1,
+            4,
+            1
+          ],
+          "Ar": [
+            1,
+            13,
+            6,
+            4,
+            1
+          ],
+          "Pr": [
+            1,
+            15,
+            8,
+            6,
+            1
+          ]
+        },
+        {
+          "cb": 199,
+          "Vr_max": 4,
+          "Ar_max": 13,
+          "Pr_max": 15,
+          "Vr": [
+            1,
+            4,
+            1
+          ],
+          "Ar": [
+            1,
+            13,
+            6,
+            4,
+            1
+          ],
+          "Pr": [
+            1,
+            15,
+            8,
+            6,
+            1
+          ]
+        }
+      ]
+    },
+    "straight": {
+      "method": "straight",
+      "status": "OK",
+      "eval": {
+        "success_rate": 1.0,
+        "mu_success": 0.9666666666666667,
+        "tradeoff_score": 0.9666666666666667,
+        "collision_rate": 0.13333333333333333,
+        "final_dist_mean": 0.0001076185323835191,
+        "path_len_mean": 0.6901317662305108,
+        "cum_reward_mean": -172452.78194796486,
+        "final_reward_mean": -0.16305838239927134
+      },
+      "time_s": 0.27049684524536133
+    },
+    "potential": {
+      "method": "potential",
+      "status": "OK",
+      "eval": {
+        "success_rate": 0.03333333333333333,
+        "mu_success": 0.0,
+        "tradeoff_score": 0.0,
+        "collision_rate": 0.0,
+        "final_dist_mean": 0.0734372290975951,
+        "path_len_mean": 0.7250837905853729,
+        "cum_reward_mean": -218370.1696692152,
+        "final_reward_mean": -73.56325588759803
+      },
+      "time_s": 0.31606531143188477
+    },
+    "random": {
+      "method": "random",
+      "status": "OK",
+      "eval": {
+        "success_rate": 0.03333333333333333,
+        "mu_success": 0.0,
+        "tradeoff_score": 0.0,
+        "collision_rate": 0.03333333333333333,
+        "final_dist_mean": 0.7120324745484179,
+        "path_len_mean": 1.8433650458747868,
+        "cum_reward_mean": -803541.0831333831,
+        "final_reward_mean": -805.475954119282
+      },
+      "time_s": 0.27314257621765137
+    },
+    "zero": {
+      "method": "zero",
+      "status": "OK",
+      "eval": {
+        "success_rate": 0.03333333333333333,
+        "mu_success": 0.0,
+        "tradeoff_score": 0.0,
+        "collision_rate": 0.0,
+        "final_dist_mean": 0.709345560776237,
+        "path_len_mean": 0.0,
+        "cum_reward_mean": -709345.5607762386,
+        "final_reward_mean": -709.3455607762371
+      },
+      "time_s": 0.24608826637268066
+    }
+  },
+  "trajectory_figure": "/home/s110/code/ttpi_iclr/repro/figures/pointmass_velocity/pointmass_velocity_notebook_seed0_trajectories.png"
+}

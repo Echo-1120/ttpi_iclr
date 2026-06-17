@@ -1,0 +1,2 @@
+name,order,dprp,status,no_lax_S_mu,lax_S_mu,lax_delta,best_paired_delta,best_paired_cb,peak_gb,lax_extra_gb,Ar_avg,Pr_avg,Ar_max,Pr_max,time_s
+local_lax,Local,False,OK,0.487138,0.487133,-0.000005,0.000000,0,2.752945,0.000007,3.631579,5.526316,7,9,185.614

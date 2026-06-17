@@ -11,17 +11,15 @@ import torch
 
 import matplotlib
 matplotlib.use("Agg", force=True)
-
 import matplotlib.pyplot as plt
-plt.ioff()
 
+plt.ioff()
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 from ttpi import TTPI
-from dynamic_systems import HardMove
-
+from repro.catch_point import CatchPoint
 
 torch.set_default_dtype(torch.float64)
 
@@ -40,7 +38,6 @@ def make_init_states(n_test, state_min, state_max, device, seed):
     dim_state = len(state_min)
     init_state = torch.empty((n_test, dim_state), dtype=torch.float64)
 
-    # 保持作者 notebook 的初始化风格：rand().clip(0.25, 0.75)
     for i in range(dim_state):
         r = torch.rand(n_test, generator=g, dtype=torch.float64).clip(0.25, 0.75)
         init_state[:, i] = state_min[i].cpu() + r * (state_max[i].cpu() - state_min[i].cpu())
@@ -58,14 +55,17 @@ def evaluate_policy(ttpi, dyn_system, init_state, dt, horizon_sec=10.0, target_r
     active = torch.ones(n, dtype=torch.bool, device=state.device)
     success = torch.zeros(n, dtype=torch.bool, device=state.device)
 
-    start_pos = state[:, :2].clone()
     prev_pos = state[:, :2].clone()
     path_len = torch.zeros(n, dtype=torch.float64, device=state.device)
     cum_reward = torch.zeros(n, dtype=torch.float64, device=state.device)
 
-    final_reward = None
+    prev_move = torch.zeros(n, dtype=torch.float64, device=state.device)
+    n_catches = torch.zeros(n, dtype=torch.float64, device=state.device)
 
-    for _ in range(T):
+    final_reward = None
+    T_episode = 200
+
+    for t in range(T):
         action = ttpi.policy(state)
         r = dyn_system.reward_state_action(state, action)
         final_reward = r
@@ -82,30 +82,32 @@ def evaluate_policy(ttpi, dyn_system, init_state, dt, horizon_sec=10.0, target_r
         success |= newly_success
         active &= ~newly_success
 
+        move_flag = action[:, 1]
+        transitions = torch.logical_and(move_flag > 0.5, prev_move <= 0.5)
+        n_catches += active.to(torch.float64) * transitions.to(torch.float64)
+        prev_move = move_flag
+
         state = next_state
         prev_pos = next_pos
 
-    shortest = torch.linalg.norm(start_pos, dim=-1)
-    mu_all = (shortest / (path_len + 1e-12)).clamp(max=1.0) ** 2
+    mu_catch = torch.where(n_catches > 0, 1.0 / n_catches, torch.tensor(0.0, device=state.device))
 
     if success.any():
-        mu_success = mu_all[success].mean()
+        mu_success = mu_catch[success].mean()
     else:
         mu_success = torch.tensor(0.0, dtype=torch.float64, device=state.device)
 
-    S_val = float(success.to(torch.float64).mean().cpu().item())
-    mu_success_val = float(mu_success.cpu().item())
     metrics = {
-        "success_rate": S_val,
-        "mu_success": mu_success_val,
-        "tradeoff_score": S_val * mu_success_val,
-        "mu_all": float(mu_all.mean().cpu().item()),
+        "success_rate": float(success.to(torch.float64).mean().cpu().item()),
+        "mu_success": float(mu_success.cpu().item()),
+        "mu_all": float(mu_catch.mean().cpu().item()),
         "final_dist_mean": float(torch.linalg.norm(state[:, :2], dim=-1).mean().cpu().item()),
         "path_len_mean": float(path_len.mean().cpu().item()),
         "cum_reward_mean": float(cum_reward.mean().cpu().item()),
         "final_reward_mean": float(final_reward.mean().cpu().item()) if final_reward is not None else None,
     }
     return metrics
+
 
 @torch.no_grad()
 def save_trajectory_figure(ttpi, dyn_system, init_state, dt, fig_path, horizon_sec=10.0, max_traj=20):
@@ -120,7 +122,7 @@ def save_trajectory_figure(ttpi, dyn_system, init_state, dt, fig_path, horizon_s
         state = dyn_system.forward_simulate(state, action)
         traj.append(state[:n_plot, :2].detach().cpu())
 
-    traj = torch.stack(traj, dim=0).numpy()  # [T+1, n_plot, 2]
+    traj = torch.stack(traj, dim=0).numpy()
 
     fig, ax = plt.subplots(figsize=(6, 6))
 
@@ -132,7 +134,7 @@ def save_trajectory_figure(ttpi, dyn_system, init_state, dt, fig_path, horizon_s
     ax.set_xlim(-1.05, 1.05)
     ax.set_ylim(-1.05, 1.05)
     ax.set_aspect("equal", adjustable="box")
-    ax.set_title("HardMove trajectories")
+    ax.set_title("CatchPoint trajectories")
     ax.set_xlabel("x")
     ax.set_ylabel("y")
     ax.legend(loc="best")
@@ -144,6 +146,7 @@ def save_trajectory_figure(ttpi, dyn_system, init_state, dt, fig_path, horizon_s
     plt.close(fig)
 
     return str(fig_path)
+
 
 def select_best_eval(eval_history):
     if not eval_history:
@@ -159,23 +162,13 @@ def select_best_eval(eval_history):
     )
 
 
-def select_best_tradeoff(eval_history):
-    """Select checkpoint with best S×μ tradeoff (Pareto-aware)."""
-    if not eval_history:
-        return None
-    return max(
-        eval_history,
-        key=lambda m: m.get("tradeoff_score", m.get("success_rate", 0) * m.get("mu_success", 0)),
-    )
-
-
 class EarlyStopTraining(Exception):
     pass
 
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--n-actuator", type=int, required=True)
-    parser.add_argument("--n-state", type=int, default=50)
+    parser.add_argument("--n-state", type=int, default=100)
     parser.add_argument("--n-action", type=int, default=100)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--n-iter", type=int, default=100)
@@ -186,6 +179,8 @@ def main():
     parser.add_argument("--gamma", type=float, default=0.99)
     parser.add_argument("--device", type=str, default="cuda")
     parser.add_argument("--target-radius", type=float, default=0.02)
+    parser.add_argument("--speed", type=float, default=0.05)
+    parser.add_argument("--damping", type=float, default=0.0)
 
     parser.add_argument("--max-batch-v", type=int, default=10000)
     parser.add_argument("--max-batch-a", type=int, default=100000)
@@ -203,15 +198,11 @@ def main():
     parser.add_argument("--early-stop-success", type=float, default=None)
     parser.add_argument("--early-stop-mu", type=float, default=0.0)
     parser.add_argument("--early-stop-after-callback", type=int, default=0)
-    parser.add_argument("--vel-symmetric", action="store_true",
-                        help="Use symmetric velocity domain [-vmax, vmax] instead of [0, vmax]")
-
 
     args = parser.parse_args()
 
     if args.device == "cuda" and not torch.cuda.is_available():
-        raise RuntimeError("CUDA is not available, but --device cuda was requested.")
-
+        raise RuntimeError("CUDA is not available.")
     device = torch.device(args.device)
     seed_everything(args.seed)
 
@@ -221,24 +212,22 @@ def main():
     model_dir.mkdir(parents=True, exist_ok=True)
 
     task_name = (
-    f"HM{args.n_actuator}"
-    f"_state{args.n_state}"
-    f"_action{args.n_action}"
-    f"_iter{args.n_iter}"
-    f"_seed{args.seed}"
-)
+        f"CP"
+        f"_state{args.n_state}"
+        f"_action{args.n_action}"
+        f"_iter{args.n_iter}"
+        f"_seed{args.seed}"
+    )
 
     L = 1.0
     position_max = L
     position_min = -L
 
-    velocity_max = 0.25 * position_max
-    velocity_min = -1.0 * velocity_max if args.vel_symmetric else 0.0 * velocity_max
-    acc_max = 1.0 * velocity_max
-    acc_min = -1.0 * acc_max
+    velocity_max = args.speed
+    velocity_min = 0.0
 
-    domain_acc0 = torch.linspace(acc_min, acc_max, args.n_action, device=device)
-    domain_switch0 = torch.arange(2, device=device, dtype=torch.float64)
+    domain_heading = torch.linspace(0.0, 2 * torch.pi, args.n_action, device=device)
+    domain_move = torch.tensor([0.0, 1.0], device=device, dtype=torch.float64)
 
     state_min = torch.tensor(
         [position_min, position_min, velocity_min, velocity_min],
@@ -256,13 +245,13 @@ def main():
         for i in range(len(state_max))
     ]
 
-    domain_action = [domain_acc0, domain_switch0] * args.n_actuator
+    domain_action = [domain_heading, domain_move]
 
-    dyn_system = HardMove(
+    dyn_system = CatchPoint(
         dt=args.dt,
+        speed=args.speed,
         w_goal=1e3,
-        w_action=1e4,
-        n=args.n_actuator,
+        w_action=1e1,
         device=device,
     )
 
@@ -281,9 +270,7 @@ def main():
     )
 
     eval_history = []
-
     best_eval = {"metrics": None}
-    best_tradeoff = {"metrics": None, "S_times_mu": -1.0}
 
     def is_better_metric(new_m, old_m):
         if old_m is None:
@@ -308,16 +295,10 @@ def main():
             target_radius=args.target_radius,
         )
         metrics["callback_count"] = int(callback_count)
-        metrics["S_times_mu"] = metrics["success_rate"] * metrics["mu_success"]
         eval_history.append(metrics)
 
         if is_better_metric(metrics, best_eval["metrics"]):
             best_eval["metrics"] = dict(metrics)
-
-        tradeoff = metrics["S_times_mu"]
-        if tradeoff > best_tradeoff["S_times_mu"]:
-            best_tradeoff["metrics"] = dict(metrics)
-            best_tradeoff["S_times_mu"] = tradeoff
 
         print("[EVAL]", json.dumps(metrics, ensure_ascii=False))
 
@@ -362,13 +343,11 @@ def main():
         verbose=True,
         device=device,
     )
-    ttpi.plt_training_stat = lambda: None  # fix: avoid matplotlib crash
 
     if torch.cuda.is_available():
         torch.cuda.reset_peak_memory_stats()
 
     t0 = time.time()
-
     stopped_early = False
 
     try:
@@ -397,43 +376,7 @@ def main():
     )
     best_metrics = select_best_eval(eval_history)
 
-    # Paper-aligned metrics: four reporting conventions from eval_history
-    paper_metrics = {}
-    if eval_history:
-        # 1. Best S (ignore mu)
-        best_S_entry = max(eval_history, key=lambda m: m.get("success_rate", 0))
-        paper_metrics["best_S"] = {
-            "S": best_S_entry.get("success_rate", 0),
-            "mu": best_S_entry.get("mu_success", 0),
-            "S_times_mu": best_S_entry.get("success_rate", 0) * best_S_entry.get("mu_success", 0),
-            "callback": best_S_entry.get("callback_count", -1),
-        }
-        # 2. Best S, then best mu among those with S == best_S
-        max_S = paper_metrics["best_S"]["S"]
-        best_S_then_mu = max(
-            [e for e in eval_history if abs(e.get("success_rate", 0) - max_S) < 1e-6],
-            key=lambda m: m.get("mu_success", 0),
-            default=best_S_entry,
-        )
-        paper_metrics["best_S_then_mu"] = {
-            "S": best_S_then_mu.get("success_rate", 0),
-            "mu": best_S_then_mu.get("mu_success", 0),
-            "S_times_mu": best_S_then_mu.get("success_rate", 0) * best_S_then_mu.get("mu_success", 0),
-            "callback": best_S_then_mu.get("callback_count", -1),
-        }
-        # 3. Best S × mu (tradeoff)
-        best_to_entry = max(
-            eval_history,
-            key=lambda m: m.get("tradeoff_score", m.get("success_rate", 0) * m.get("mu_success", 0)),
-        )
-        paper_metrics["best_S_times_mu"] = {
-            "S": best_to_entry.get("success_rate", 0),
-            "mu": best_to_entry.get("mu_success", 0),
-            "S_times_mu": best_to_entry.get("success_rate", 0) * best_to_entry.get("mu_success", 0),
-            "callback": best_to_entry.get("callback_count", -1),
-        }
-
-    fig_dir = ROOT / "repro" / "figures" / "hardmove"
+    fig_dir = ROOT / "repro" / "figures" / "catchpoint"
     fig_path = fig_dir / f"{task_name}_traj.png"
 
     traj_fig = save_trajectory_figure(
@@ -447,23 +390,18 @@ def main():
     )
 
     result = {
-        "task": f"HM({args.n_actuator})",
+        "task": "CP",
         "seed": args.seed,
         "n_state": args.n_state,
         "n_action": args.n_action,
-        "n_actuator": args.n_actuator,
-        "action_dim": 2 * args.n_actuator,
+        "action_dim": 2,
         "dt": args.dt,
         "gamma": args.gamma,
         "n_iter": args.n_iter,
         "n_iter_v": args.n_iter_v,
         "n_test": args.n_test,
         "target_radius": args.target_radius,
-        "vel_symmetric": args.vel_symmetric,
-        "state_min": [float(x) for x in state_min.detach().cpu().tolist()],
-        "state_max": [float(x) for x in state_max.detach().cpu().tolist()],
-        "velocity_min": float(velocity_min),
-        "velocity_max": float(velocity_max),
+        "speed": args.speed,
         "max_batch_v": args.max_batch_v,
         "max_batch_a": args.max_batch_a,
         "nswp_v": args.nswp_v,
@@ -487,8 +425,6 @@ def main():
         ),
         "trajectory_figure": traj_fig,
         "best_metrics": best_metrics,
-        "best_tradeoff_metrics": best_tradeoff["metrics"],
-        "paper_metrics": paper_metrics,
         "stopped_early": stopped_early,
         "early_stop_success": args.early_stop_success,
         "early_stop_mu": args.early_stop_mu,
@@ -501,6 +437,7 @@ def main():
 
     print(f"[DONE] saved result to {out_file}")
     print(json.dumps(result["final_metrics"], indent=2, ensure_ascii=False))
+
 
 if __name__ == "__main__":
     main()
