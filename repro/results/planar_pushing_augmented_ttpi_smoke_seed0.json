@@ -1,0 +1,330 @@
+{
+  "script": "/home/s110/code/ttpi_iclr/repro/scripts/run_planar_pushing_augmented_ttpi.py",
+  "preset": "smoke",
+  "seed": 0,
+  "device": "cpu",
+  "config": {
+    "preset": "smoke",
+    "cases": "baseline,contact_state",
+    "seed": 0,
+    "device": "cpu",
+    "output_stem": null,
+    "n_state": 12,
+    "n_theta": 9,
+    "n_pusher": 7,
+    "n_action": 7,
+    "n_param": 5,
+    "n_test": 8,
+    "workspace": 0.2,
+    "dt": 0.025,
+    "horizon": 0.25,
+    "position_tol": 0.01,
+    "position_scale": 0.3,
+    "theta_tol": 0.01,
+    "face_switch_weight": 0.15,
+    "effort_weight": 0.04,
+    "contact_weight": 0.03,
+    "success_xy": 0.03,
+    "success_theta": 0.2617993877991494,
+    "gamma": 0.99,
+    "n_iter": 1,
+    "n_iter_v": 1,
+    "callback_freq": 1,
+    "max_batch_v": 3000,
+    "max_batch_a": 6000,
+    "nswp_v": 2,
+    "nswp_a": 2,
+    "rmax_v": 20,
+    "rmax_a": 20,
+    "kickrank_v": 4,
+    "kickrank_a": 4,
+    "eps_cross_v": 0.001,
+    "eps_cross_a": 0.001,
+    "eps_round_v": 0.001,
+    "eps_round_a": 0.001,
+    "n_samples": 8
+  },
+  "notes": [
+    "TTPI controller smoke for parameter-augmented state.",
+    "This keeps state modes before action modes; it is not full cross-block PAM.",
+    "mass is persistent and enters the effort proxy; friction enters contact dynamics."
+  ],
+  "records": [
+    {
+      "case": "baseline",
+      "status": "OK",
+      "state_order": [
+        "slider_x",
+        "slider_y",
+        "theta",
+        "pusher_x",
+        "pusher_y",
+        "current_face",
+        "mass",
+        "friction"
+      ],
+      "action_order": [
+        "next_face",
+        "vx",
+        "vy"
+      ],
+      "time_s": 4.33548903465271,
+      "peak_gb": 0.0,
+      "eval_history": [
+        {
+          "success_rate": 0.0,
+          "final_pos_mean": 0.10309081929466829,
+          "final_theta_abs_mean": 1.1347673149848885,
+          "cum_reward_mean": -282.4783040538131,
+          "final_reward_mean": -28.186136797752706,
+          "cb": 0
+        },
+        {
+          "success_rate": 0.0,
+          "final_pos_mean": 0.10280416468064937,
+          "final_theta_abs_mean": 1.1275217685997605,
+          "cum_reward_mean": -282.16973391203635,
+          "final_reward_mean": -28.055753034100672,
+          "cb": 0
+        }
+      ],
+      "rank_history": [
+        {
+          "cb": 0,
+          "Ar": [
+            1,
+            5,
+            4,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            1
+          ],
+          "Vr": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "Pr": [
+            1,
+            7,
+            6,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            1
+          ],
+          "Ar_max": 5,
+          "Vr_max": 1,
+          "Pr_max": 7
+        },
+        {
+          "cb": 0,
+          "Ar": [
+            1,
+            5,
+            4,
+            5,
+            4,
+            4,
+            4,
+            4,
+            4,
+            3,
+            3,
+            1
+          ],
+          "Vr": [
+            1,
+            5,
+            3,
+            3,
+            2,
+            3,
+            1,
+            1,
+            1
+          ],
+          "Pr": [
+            1,
+            7,
+            6,
+            7,
+            6,
+            6,
+            6,
+            6,
+            6,
+            5,
+            5,
+            1
+          ],
+          "Ar_max": 5,
+          "Vr_max": 5,
+          "Pr_max": 7
+        }
+      ],
+      "final_eval": {
+        "success_rate": 0.0,
+        "final_pos_mean": 0.10280416468064937,
+        "final_theta_abs_mean": 1.1275217685997605,
+        "cum_reward_mean": -282.16973391203635,
+        "final_reward_mean": -28.055753034100672
+      }
+    },
+    {
+      "case": "contact_state",
+      "status": "OK",
+      "state_order": [
+        "slider_x",
+        "slider_y",
+        "current_face",
+        "theta",
+        "pusher_x",
+        "pusher_y",
+        "friction",
+        "mass"
+      ],
+      "action_order": [
+        "next_face",
+        "vx",
+        "vy"
+      ],
+      "time_s": 4.442718267440796,
+      "peak_gb": 0.0,
+      "eval_history": [
+        {
+          "success_rate": 0.0,
+          "final_pos_mean": 0.10322098976207525,
+          "final_theta_abs_mean": 0.8677678040610959,
+          "cum_reward_mean": -252.71325149342903,
+          "final_reward_mean": -25.229476406729034,
+          "cb": 0
+        },
+        {
+          "success_rate": 0.0,
+          "final_pos_mean": 0.10385756122804835,
+          "final_theta_abs_mean": 0.8584594938031824,
+          "cum_reward_mean": -252.74096226946287,
+          "final_reward_mean": -25.21009806108481,
+          "cb": 0
+        }
+      ],
+      "rank_history": [
+        {
+          "cb": 0,
+          "Ar": [
+            1,
+            5,
+            3,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            4,
+            3,
+            1
+          ],
+          "Vr": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "Pr": [
+            1,
+            7,
+            5,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            6,
+            5,
+            1
+          ],
+          "Ar_max": 5,
+          "Vr_max": 1,
+          "Pr_max": 7
+        },
+        {
+          "cb": 0,
+          "Ar": [
+            1,
+            4,
+            4,
+            5,
+            4,
+            4,
+            4,
+            4,
+            4,
+            3,
+            2,
+            1
+          ],
+          "Vr": [
+            1,
+            4,
+            3,
+            3,
+            2,
+            2,
+            2,
+            2,
+            1
+          ],
+          "Pr": [
+            1,
+            6,
+            6,
+            7,
+            6,
+            6,
+            6,
+            6,
+            6,
+            5,
+            4,
+            1
+          ],
+          "Ar_max": 5,
+          "Vr_max": 4,
+          "Pr_max": 7
+        }
+      ],
+      "final_eval": {
+        "success_rate": 0.0,
+        "final_pos_mean": 0.10385756122804835,
+        "final_theta_abs_mean": 0.8584594938031824,
+        "cum_reward_mean": -252.74096226946287,
+        "final_reward_mean": -25.21009806108481
+      }
+    }
+  ]
+}

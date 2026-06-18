@@ -1,0 +1,2 @@
+case,status,time_s,peak_gb,nominal_success,offgrid_success,nominal_tradeoff,offgrid_tradeoff,final_dist_offgrid,Ar_max,Pr_max
+pam_local,OK,64.85819172859192,0.0,1.0,1.0,0.6652499921430407,0.6823649220786793,0.013711356701952667,16,18

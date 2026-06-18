@@ -1,0 +1,852 @@
+{
+  "script": "/home/s110/code/ttpi_iclr/repro/scripts/run_catch_point_augmented.py",
+  "preset": "pilot",
+  "seed": 0,
+  "device": "cuda",
+  "config": {
+    "preset": "pilot",
+    "cases": "baseline,pam_local,bad_locality",
+    "seed": 0,
+    "device": "cuda",
+    "output_stem": null,
+    "n_state": 35,
+    "n_velocity": 21,
+    "n_param": 7,
+    "n_footsteps": 16,
+    "n_force": 35,
+    "n_test": 50,
+    "pos_max": 1.0,
+    "vel_max": 0.45,
+    "force_max": 1.2,
+    "wind_max": 0.25,
+    "wind_test_max": 0.35,
+    "dt": 0.05,
+    "horizon": 6.0,
+    "target_radius": 0.05,
+    "damping": 0.15,
+    "w_goal": 25.0,
+    "w_velocity": 0.5,
+    "w_force": 0.02,
+    "w_progress": 8.0,
+    "max_plot_traj": 16,
+    "gamma": 0.98,
+    "n_iter": 20,
+    "n_iter_v": 1,
+    "callback_freq": 2,
+    "max_batch_v": 10000,
+    "max_batch_a": 30000,
+    "nswp_v": 5,
+    "nswp_a": 5,
+    "rmax_v": 60,
+    "rmax_a": 60,
+    "kickrank_v": 4,
+    "kickrank_a": 4,
+    "eps_cross_v": 0.001,
+    "eps_cross_a": 0.001,
+    "eps_round_v": 0.001,
+    "eps_round_a": 0.001,
+    "n_samples": 32,
+    "early_stop_success": 0.95,
+    "early_stop_after_callback": 5
+  },
+  "notes": [
+    "Parameter-augmented CP with persistent wind.",
+    "Action modes are [discrete footstep_id, continuous force].",
+    "This is a low-dimensional robustness/PAM diagnostic, not the old heading+move_flag CP baseline."
+  ],
+  "records": [
+    {
+      "case": "baseline",
+      "status": "EARLY_STOP",
+      "state_order": [
+        "x",
+        "y",
+        "vx",
+        "vy",
+        "wind"
+      ],
+      "action_order": [
+        "footstep",
+        "force"
+      ],
+      "time_s": 14.627358436584473,
+      "peak_gb": 0.491994624,
+      "final_nominal": {
+        "success_rate": 1.0,
+        "mu_success": 0.6708763705476863,
+        "tradeoff_score": 0.6708763705476863,
+        "final_dist_mean": 0.0143379334618835,
+        "path_len_mean": 0.5144946743664984,
+        "cum_reward_mean": -92.01296939249966,
+        "final_reward_mean": -0.006287853636974442
+      },
+      "final_offgrid": {
+        "success_rate": 1.0,
+        "mu_success": 0.663622239977814,
+        "tradeoff_score": 0.663622239977814,
+        "final_dist_mean": 0.016104579860714636,
+        "path_len_mean": 0.5238471204441865,
+        "cum_reward_mean": -91.85486189444666,
+        "final_reward_mean": -0.007509103693068
+      },
+      "eval_history": [
+        {
+          "nominal": {
+            "success_rate": 1.0,
+            "mu_success": 0.6571339362598009,
+            "tradeoff_score": 0.6571339362598009,
+            "final_dist_mean": 0.03597090595743552,
+            "path_len_mean": 0.5517306288136123,
+            "cum_reward_mean": -98.36962628523656,
+            "final_reward_mean": -0.03407516040593904,
+            "cb": 0
+          },
+          "offgrid": {
+            "success_rate": 1.0,
+            "mu_success": 0.6460325168018137,
+            "tradeoff_score": 0.6460325168018137,
+            "final_dist_mean": 0.03657990544805161,
+            "path_len_mean": 0.5722288994657189,
+            "cum_reward_mean": -98.36014536259074,
+            "final_reward_mean": -0.03559107888841998,
+            "cb": 0
+          }
+        },
+        {
+          "nominal": {
+            "success_rate": 1.0,
+            "mu_success": 0.6676847392308559,
+            "tradeoff_score": 0.6676847392308559,
+            "final_dist_mean": 0.012453564526514312,
+            "path_len_mean": 0.5215698355805843,
+            "cum_reward_mean": -91.63031236778515,
+            "final_reward_mean": -0.00895212658408319,
+            "cb": 1
+          },
+          "offgrid": {
+            "success_rate": 1.0,
+            "mu_success": 0.6611791482188732,
+            "tradeoff_score": 0.6611791482188732,
+            "final_dist_mean": 0.011692867500233281,
+            "path_len_mean": 0.5300839936477333,
+            "cum_reward_mean": -91.25139873835202,
+            "final_reward_mean": -0.009655696056714982,
+            "cb": 1
+          }
+        },
+        {
+          "nominal": {
+            "success_rate": 1.0,
+            "mu_success": 0.6693537814111729,
+            "tradeoff_score": 0.6693537814111729,
+            "final_dist_mean": 0.019210746008701957,
+            "path_len_mean": 0.5179726515400082,
+            "cum_reward_mean": -91.57111397740685,
+            "final_reward_mean": -0.010344559302799707,
+            "cb": 3
+          },
+          "offgrid": {
+            "success_rate": 1.0,
+            "mu_success": 0.6634386534992056,
+            "tradeoff_score": 0.6634386534992056,
+            "final_dist_mean": 0.01793862013024236,
+            "path_len_mean": 0.5246817831668641,
+            "cum_reward_mean": -91.14147313300491,
+            "final_reward_mean": -0.009039364960906899,
+            "cb": 3
+          }
+        },
+        {
+          "nominal": {
+            "success_rate": 1.0,
+            "mu_success": 0.6708763705476863,
+            "tradeoff_score": 0.6708763705476863,
+            "final_dist_mean": 0.0143379334618835,
+            "path_len_mean": 0.5144946743664984,
+            "cum_reward_mean": -92.01296939249966,
+            "final_reward_mean": -0.006287853636974442,
+            "cb": 5
+          },
+          "offgrid": {
+            "success_rate": 1.0,
+            "mu_success": 0.663622239977814,
+            "tradeoff_score": 0.663622239977814,
+            "final_dist_mean": 0.016104579860714636,
+            "path_len_mean": 0.5238471204441865,
+            "cum_reward_mean": -91.85486189444666,
+            "final_reward_mean": -0.007509103693068,
+            "cb": 5
+          }
+        }
+      ],
+      "rank_history": [
+        {
+          "cb": 0,
+          "Ar": [
+            1,
+            9,
+            7,
+            6,
+            6,
+            6,
+            3,
+            1
+          ],
+          "Vr": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "Pr": [
+            1,
+            11,
+            9,
+            8,
+            8,
+            8,
+            5,
+            1
+          ],
+          "Ar_max": 9,
+          "Vr_max": 1,
+          "Pr_max": 11
+        },
+        {
+          "cb": 1,
+          "Ar": [
+            1,
+            8,
+            10,
+            8,
+            5,
+            5,
+            2,
+            1
+          ],
+          "Vr": [
+            1,
+            6,
+            7,
+            5,
+            2,
+            1
+          ],
+          "Pr": [
+            1,
+            10,
+            12,
+            10,
+            7,
+            7,
+            4,
+            1
+          ],
+          "Ar_max": 10,
+          "Vr_max": 7,
+          "Pr_max": 12
+        },
+        {
+          "cb": 3,
+          "Ar": [
+            1,
+            9,
+            14,
+            12,
+            7,
+            7,
+            3,
+            1
+          ],
+          "Vr": [
+            1,
+            6,
+            8,
+            5,
+            2,
+            1
+          ],
+          "Pr": [
+            1,
+            11,
+            16,
+            14,
+            9,
+            9,
+            5,
+            1
+          ],
+          "Ar_max": 14,
+          "Vr_max": 8,
+          "Pr_max": 16
+        },
+        {
+          "cb": 5,
+          "Ar": [
+            1,
+            10,
+            17,
+            16,
+            12,
+            11,
+            5,
+            1
+          ],
+          "Vr": [
+            1,
+            6,
+            11,
+            6,
+            2,
+            1
+          ],
+          "Pr": [
+            1,
+            12,
+            19,
+            18,
+            14,
+            13,
+            7,
+            1
+          ],
+          "Ar_max": 17,
+          "Vr_max": 11,
+          "Pr_max": 19
+        }
+      ],
+      "trajectory_figure": "/home/s110/code/ttpi_iclr/repro/figures/catchpoint_augmented/catch_point_augmented_pilot_baseline_seed0.png"
+    },
+    {
+      "case": "pam_local",
+      "status": "EARLY_STOP",
+      "state_order": [
+        "x",
+        "vx",
+        "wind",
+        "y",
+        "vy"
+      ],
+      "action_order": [
+        "footstep",
+        "force"
+      ],
+      "time_s": 11.11799955368042,
+      "peak_gb": 0.49250816,
+      "final_nominal": {
+        "success_rate": 1.0,
+        "mu_success": 0.6576237389509771,
+        "tradeoff_score": 0.6576237389509771,
+        "final_dist_mean": 0.015114769150082483,
+        "path_len_mean": 0.5341293310981629,
+        "cum_reward_mean": -94.0118312712938,
+        "final_reward_mean": -0.011125445326755532
+      },
+      "final_offgrid": {
+        "success_rate": 1.0,
+        "mu_success": 0.6602433868037492,
+        "tradeoff_score": 0.6602433868037492,
+        "final_dist_mean": 0.017132487989984777,
+        "path_len_mean": 0.5283501690882318,
+        "cum_reward_mean": -91.88456050285302,
+        "final_reward_mean": -0.013206920882978168
+      },
+      "eval_history": [
+        {
+          "nominal": {
+            "success_rate": 1.0,
+            "mu_success": 0.6346197089341856,
+            "tradeoff_score": 0.6346197089341856,
+            "final_dist_mean": 0.036203297825458794,
+            "path_len_mean": 0.5928553449671783,
+            "cum_reward_mean": -100.78683171174603,
+            "final_reward_mean": -0.03545879891128492,
+            "cb": 0
+          },
+          "offgrid": {
+            "success_rate": 1.0,
+            "mu_success": 0.6305979932528709,
+            "tradeoff_score": 0.6305979932528709,
+            "final_dist_mean": 0.0370316101006711,
+            "path_len_mean": 0.6069604284742114,
+            "cum_reward_mean": -99.236765362498,
+            "final_reward_mean": -0.03780092749326486,
+            "cb": 0
+          }
+        },
+        {
+          "nominal": {
+            "success_rate": 1.0,
+            "mu_success": 0.6558893702421661,
+            "tradeoff_score": 0.6558893702421661,
+            "final_dist_mean": 0.03251786429757918,
+            "path_len_mean": 0.5377866995690116,
+            "cum_reward_mean": -95.13917989648449,
+            "final_reward_mean": -0.03198596444859413,
+            "cb": 1
+          },
+          "offgrid": {
+            "success_rate": 1.0,
+            "mu_success": 0.6579894084945537,
+            "tradeoff_score": 0.6579894084945537,
+            "final_dist_mean": 0.03196880481722451,
+            "path_len_mean": 0.5334291831146522,
+            "cum_reward_mean": -92.91113225218233,
+            "final_reward_mean": -0.033972097993124055,
+            "cb": 1
+          }
+        },
+        {
+          "nominal": {
+            "success_rate": 1.0,
+            "mu_success": 0.6559004814145092,
+            "tradeoff_score": 0.6559004814145092,
+            "final_dist_mean": 0.018176659895071383,
+            "path_len_mean": 0.5380908875793148,
+            "cum_reward_mean": -93.64940030608881,
+            "final_reward_mean": -0.013260642921745582,
+            "cb": 3
+          },
+          "offgrid": {
+            "success_rate": 1.0,
+            "mu_success": 0.6582389018284863,
+            "tradeoff_score": 0.6582389018284863,
+            "final_dist_mean": 0.017634367408256493,
+            "path_len_mean": 0.5330168885189058,
+            "cum_reward_mean": -91.36143359115788,
+            "final_reward_mean": -0.011975465442029806,
+            "cb": 3
+          }
+        },
+        {
+          "nominal": {
+            "success_rate": 1.0,
+            "mu_success": 0.6576237389509771,
+            "tradeoff_score": 0.6576237389509771,
+            "final_dist_mean": 0.015114769150082483,
+            "path_len_mean": 0.5341293310981629,
+            "cum_reward_mean": -94.0118312712938,
+            "final_reward_mean": -0.011125445326755532,
+            "cb": 5
+          },
+          "offgrid": {
+            "success_rate": 1.0,
+            "mu_success": 0.6602433868037492,
+            "tradeoff_score": 0.6602433868037492,
+            "final_dist_mean": 0.017132487989984777,
+            "path_len_mean": 0.5283501690882318,
+            "cum_reward_mean": -91.88456050285302,
+            "final_reward_mean": -0.013206920882978168,
+            "cb": 5
+          }
+        }
+      ],
+      "rank_history": [
+        {
+          "cb": 0,
+          "Ar": [
+            1,
+            9,
+            10,
+            10,
+            6,
+            6,
+            3,
+            1
+          ],
+          "Vr": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "Pr": [
+            1,
+            11,
+            12,
+            12,
+            8,
+            8,
+            5,
+            1
+          ],
+          "Ar_max": 10,
+          "Vr_max": 1,
+          "Pr_max": 12
+        },
+        {
+          "cb": 1,
+          "Ar": [
+            1,
+            8,
+            5,
+            5,
+            7,
+            5,
+            2,
+            1
+          ],
+          "Vr": [
+            1,
+            5,
+            3,
+            2,
+            4,
+            1
+          ],
+          "Pr": [
+            1,
+            10,
+            7,
+            7,
+            9,
+            7,
+            4,
+            1
+          ],
+          "Ar_max": 8,
+          "Vr_max": 5,
+          "Pr_max": 10
+        },
+        {
+          "cb": 3,
+          "Ar": [
+            1,
+            9,
+            11,
+            10,
+            11,
+            8,
+            4,
+            1
+          ],
+          "Vr": [
+            1,
+            5,
+            4,
+            3,
+            4,
+            1
+          ],
+          "Pr": [
+            1,
+            11,
+            13,
+            12,
+            13,
+            10,
+            6,
+            1
+          ],
+          "Ar_max": 11,
+          "Vr_max": 5,
+          "Pr_max": 13
+        },
+        {
+          "cb": 5,
+          "Ar": [
+            1,
+            10,
+            12,
+            11,
+            15,
+            11,
+            5,
+            1
+          ],
+          "Vr": [
+            1,
+            6,
+            4,
+            3,
+            5,
+            1
+          ],
+          "Pr": [
+            1,
+            12,
+            14,
+            13,
+            17,
+            13,
+            7,
+            1
+          ],
+          "Ar_max": 15,
+          "Vr_max": 6,
+          "Pr_max": 17
+        }
+      ],
+      "trajectory_figure": "/home/s110/code/ttpi_iclr/repro/figures/catchpoint_augmented/catch_point_augmented_pilot_pam_local_seed0.png"
+    },
+    {
+      "case": "bad_locality",
+      "status": "EARLY_STOP",
+      "state_order": [
+        "wind",
+        "y",
+        "vy",
+        "x",
+        "vx"
+      ],
+      "action_order": [
+        "footstep",
+        "force"
+      ],
+      "time_s": 10.877990245819092,
+      "peak_gb": 0.493144576,
+      "final_nominal": {
+        "success_rate": 1.0,
+        "mu_success": 0.657135679859375,
+        "tradeoff_score": 0.657135679859375,
+        "final_dist_mean": 0.01909666423424037,
+        "path_len_mean": 0.5361315872323164,
+        "cum_reward_mean": -94.9757600166772,
+        "final_reward_mean": -0.029262415461679257
+      },
+      "final_offgrid": {
+        "success_rate": 1.0,
+        "mu_success": 0.6563844616850989,
+        "tradeoff_score": 0.6563844616850989,
+        "final_dist_mean": 0.019040204689773712,
+        "path_len_mean": 0.5372168199801889,
+        "cum_reward_mean": -96.80711585658574,
+        "final_reward_mean": -0.029403814999333245
+      },
+      "eval_history": [
+        {
+          "nominal": {
+            "success_rate": 1.0,
+            "mu_success": 0.6475409422168764,
+            "tradeoff_score": 0.6475409422168764,
+            "final_dist_mean": 0.01733293738680757,
+            "path_len_mean": 0.5627251390909541,
+            "cum_reward_mean": -98.69293164518726,
+            "final_reward_mean": -0.009601042007197127,
+            "cb": 0
+          },
+          "offgrid": {
+            "success_rate": 1.0,
+            "mu_success": 0.6364828173597274,
+            "tradeoff_score": 0.6364828173597274,
+            "final_dist_mean": 0.02237146242028711,
+            "path_len_mean": 0.5922127873389655,
+            "cum_reward_mean": -101.21227208293112,
+            "final_reward_mean": -0.0167325979246964,
+            "cb": 0
+          }
+        },
+        {
+          "nominal": {
+            "success_rate": 1.0,
+            "mu_success": 0.6551039070346302,
+            "tradeoff_score": 0.6551039070346302,
+            "final_dist_mean": 0.037919096475252774,
+            "path_len_mean": 0.5405784695635998,
+            "cum_reward_mean": -95.52709314893178,
+            "final_reward_mean": -0.03947371201735869,
+            "cb": 1
+          },
+          "offgrid": {
+            "success_rate": 1.0,
+            "mu_success": 0.6538630540645692,
+            "tradeoff_score": 0.6538630540645692,
+            "final_dist_mean": 0.035216568400629734,
+            "path_len_mean": 0.5431468535860023,
+            "cum_reward_mean": -97.6191562282966,
+            "final_reward_mean": -0.04075488542531607,
+            "cb": 1
+          }
+        },
+        {
+          "nominal": {
+            "success_rate": 1.0,
+            "mu_success": 0.6566185587884266,
+            "tradeoff_score": 0.6566185587884266,
+            "final_dist_mean": 0.021653531345995285,
+            "path_len_mean": 0.5376875059259991,
+            "cum_reward_mean": -94.07277752318024,
+            "final_reward_mean": -0.026184813612359647,
+            "cb": 3
+          },
+          "offgrid": {
+            "success_rate": 1.0,
+            "mu_success": 0.6552361741873142,
+            "tradeoff_score": 0.6552361741873142,
+            "final_dist_mean": 0.021337598078657028,
+            "path_len_mean": 0.5398733725905046,
+            "cum_reward_mean": -96.20530840019212,
+            "final_reward_mean": -0.027540084158652958,
+            "cb": 3
+          }
+        },
+        {
+          "nominal": {
+            "success_rate": 1.0,
+            "mu_success": 0.657135679859375,
+            "tradeoff_score": 0.657135679859375,
+            "final_dist_mean": 0.01909666423424037,
+            "path_len_mean": 0.5361315872323164,
+            "cum_reward_mean": -94.9757600166772,
+            "final_reward_mean": -0.029262415461679257,
+            "cb": 5
+          },
+          "offgrid": {
+            "success_rate": 1.0,
+            "mu_success": 0.6563844616850989,
+            "tradeoff_score": 0.6563844616850989,
+            "final_dist_mean": 0.019040204689773712,
+            "path_len_mean": 0.5372168199801889,
+            "cum_reward_mean": -96.80711585658574,
+            "final_reward_mean": -0.029403814999333245,
+            "cb": 5
+          }
+        }
+      ],
+      "rank_history": [
+        {
+          "cb": 0,
+          "Ar": [
+            1,
+            2,
+            10,
+            11,
+            8,
+            7,
+            3,
+            1
+          ],
+          "Vr": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "Pr": [
+            1,
+            4,
+            12,
+            13,
+            10,
+            9,
+            5,
+            1
+          ],
+          "Ar_max": 11,
+          "Vr_max": 1,
+          "Pr_max": 13
+        },
+        {
+          "cb": 1,
+          "Ar": [
+            1,
+            2,
+            9,
+            7,
+            9,
+            5,
+            2,
+            1
+          ],
+          "Vr": [
+            1,
+            2,
+            7,
+            4,
+            4,
+            1
+          ],
+          "Pr": [
+            1,
+            4,
+            11,
+            9,
+            11,
+            7,
+            4,
+            1
+          ],
+          "Ar_max": 9,
+          "Vr_max": 7,
+          "Pr_max": 11
+        },
+        {
+          "cb": 3,
+          "Ar": [
+            1,
+            3,
+            10,
+            11,
+            13,
+            8,
+            3,
+            1
+          ],
+          "Vr": [
+            1,
+            2,
+            6,
+            4,
+            5,
+            1
+          ],
+          "Pr": [
+            1,
+            5,
+            12,
+            13,
+            15,
+            10,
+            5,
+            1
+          ],
+          "Ar_max": 13,
+          "Vr_max": 6,
+          "Pr_max": 15
+        },
+        {
+          "cb": 5,
+          "Ar": [
+            1,
+            3,
+            13,
+            13,
+            15,
+            10,
+            4,
+            1
+          ],
+          "Vr": [
+            1,
+            2,
+            7,
+            4,
+            5,
+            1
+          ],
+          "Pr": [
+            1,
+            5,
+            15,
+            15,
+            17,
+            12,
+            6,
+            1
+          ],
+          "Ar_max": 15,
+          "Vr_max": 7,
+          "Pr_max": 17
+        }
+      ],
+      "trajectory_figure": "/home/s110/code/ttpi_iclr/repro/figures/catchpoint_augmented/catch_point_augmented_pilot_bad_locality_seed0.png"
+    }
+  ],
+  "summary_csv": "/home/s110/code/ttpi_iclr/repro/results/catch_point_augmented_pilot_seed0.summary.csv"
+}

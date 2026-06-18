@@ -397,12 +397,14 @@ def deterministic_top_k(tt_cores, domain=[],
     n_site_0 = tt_cores_ext[0].shape[-2]
     # samples_site:  batch_size x min(n_samples,n_site) 
     idx_k = torch.topk(pmf.view(batch_size,-1),k=min(n_samples,n_site_0),dim=-1)[1].fmod(n_site_0).long()
+    p_cum = (tt_cores_ext[0].permute([0,2,1,3])[torch.arange(batch_size).unsqueeze(1),idx_k]).permute([0,2,1,3])[:,0,:,:]
     if n_site_0 < n_samples: 
-        samples_idx[:,:,0] = idx_k.repeat(1,int(n_samples/n_site_0)+1)[:,:n_samples] #batch_size x n_samples
+        repeat = int(n_samples/n_site_0)+1
+        samples_idx[:,:,0] = idx_k.repeat(1,repeat)[:,:n_samples] #batch_size x n_samples
+        p_cum = p_cum.repeat(1, repeat, 1)[:, :n_samples, :]
     else:
         samples_idx[:,:,0] = idx_k
     # p_cum: batch_size x n_samples x r_1
-    p_cum = (tt_cores_ext[0].permute([0,2,1,3])[torch.arange(batch_size).unsqueeze(1),idx_k]).permute([0,2,1,3])[:,0,:,:]
 
     for site in range(1,len(tt_cores_ext)):
         n_sites = tt_cores_ext[site].shape[-2]

@@ -1,0 +1,8 @@
+case,max_rank,mean_rank,storage,peak_memory_gb,time_s,ranks,order
+baseline_spa,27,15.0,18121,1.4674491882324219,52.32366228103638,1 7 4 6 6 22 25 27 25 17 11 1,slider_x slider_y theta pusher_x pusher_y current_face mass friction next_face vx vy
+pam_local,16,7.9,5665,0.0,30.40110731124878,1 7 4 7 4 6 7 7 16 12 9 1,slider_x slider_y current_face next_face theta mass pusher_x pusher_y friction vx vy
+pam_contact_local,16,8.0,5772,0.0,30.0915846824646,1 7 4 5 8 5 7 7 16 12 9 1,slider_x slider_y mass current_face next_face theta pusher_x pusher_y friction vx vy
+pam_theta_contact,16,7.4,5240,0.0,29.6297128200531,1 7 4 7 4 6 6 16 11 11 2 1,slider_x slider_y current_face next_face theta pusher_x pusher_y friction vx vy mass
+bad_locality_only,28,16.0,32747,0.04933929443359375,58.89512395858765,1 2 8 22 17 26 25 28 15 13 4 1,mass friction vx vy next_face theta slider_x slider_y pusher_x pusher_y current_face
+bad_split,29,19.4,35204,0.015560150146484375,53.56787872314453,1 5 16 28 28 29 29 22 16 12 9 1,theta slider_x vx mass pusher_y next_face slider_y friction current_face pusher_x vy
+face_local_only,26,13.5,22820,0.01801300048828125,54.21903848648071,1 7 4 6 22 24 26 20 19 3 4 1,slider_x slider_y theta friction mass vx vy pusher_x pusher_y current_face next_face

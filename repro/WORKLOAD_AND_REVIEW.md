@@ -668,3 +668,438 @@ min_pi sum_{i,j} w_ij |pi(i) - pi(j)|
    - 参数增强 state。
    - Nominal vs robust。
    - LocalAction vs BadSplitAction。
+
+## 8. 新阶段：三类动力学瓶颈对标
+
+用户给出的新实验叙事：
+
+1. Hard-Move (HM)：高维平行执行器系统，物理耦合呈局部并列结构。
+2. Planar Pushing：非抓取接触动力学系统，物理耦合呈强非线性、状态-动作-参数高度纠缠结构。
+3. Catch-Point：低维经典控制基准，用来证明 PAM 不会产生负面影响，且低维下启动稳定。
+
+当前小阶段目标：
+
+- 先进入 Non-Prehensile Planar Pushing。
+- 参考原 TTPI 的 `PushingTask.ipynb` 和 `pushing_dyn_explicit_double.py`。
+- 加入参数增强 `alpha=[mass, friction]` 的证据链。
+- 对比 Baseline `[states, params, actions]` 与 PAM/Local 排布的 TT rank / memory / domain-contraction proxy。
+
+代码事实核查：
+
+- `PushingTask.ipynb` 中 state 为 6 个 mode：
+  - `[slider_x, slider_y, slider_theta, pusher_x, pusher_y, current_face]`
+- 当前仓库动作实际为 3 个 mode：
+  - `[next_face, vx, vy]`
+- 用户描述里的 `a in R^4` 与当前 notebook 接口不一致；当前实现先以仓库可运行接口为准。
+- `pushing_dyn_explicit_double.py` 里接触摩擦 `u_ps=0.3` 会进入 `gama_t/gama_b` 和接触 cone；地面摩擦 `u_gs=0.35` 当前未在显式动力学公式中实际使用。
+- 当前显式动力学没有质量项；若要严谨使用 `mass in [0.2, 2.0] kg`，需要扩展动力学或作为 reward/control-effort/robustness proxy 的参数。不能在未改模型前声称“质量参数已经进入真实动力学”。
+
+本阶段口径：
+
+- 先完成可复查的 Planar Pushing PAM rank-proxy 脚本，验证参数增强后一阶 reward/contact proxy 在不同 mode ordering 下的 TT rank 差异。
+- 完整“PAM-RTTPI 训练并在未知摩擦下 100% 成功”尚未完成；必须等多 seed 训练和 rollout 结果支撑后才能写入论文结论。
+
+### 8.1 Planar Pushing rank-proxy smoke
+
+新增脚本：
+
+- `repro/scripts/run_planar_pushing_pam_proxy.py`
+
+新增产物：
+
+- `repro/results/planar_pushing_pam_proxy_smoke_seed0_score.json`
+- `repro/results/planar_pushing_pam_proxy_smoke_seed0_score.summary.csv`
+- `repro/figures/planar_pushing/planar_pushing_pam_proxy_smoke_seed0_score_rank_proxy.png`
+
+脚本做的事情：
+
+- 构造参数增强 mode：
+  - state: `[slider_x, slider_y, theta, pusher_x, pusher_y, current_face]`
+  - params: `[mass, friction]`
+  - action: `[next_face, vx, vy]`
+- 复刻当前显式推物动力学中的接触 cone：
+  - `friction` 进入 `gamma_t/gamma_b` 与 sticking/sliding mode。
+  - `pusher_y` 也进入 `gamma_t/gamma_b`，所以它必须被视作接触局部邻域的一部分。
+  - `mass` 目前只进入 effort proxy；当前仓库的 quasi-static pushing dynamics 没有 inertial mass 项。
+- 对同一个 one-step pushing score 做 TT-Cross，只改变 mode ordering。
+- 2026-06-17 修正：
+  - `face_to_signed()` 原先误把 face `0` 映射为 `-2`。
+  - 已改为查表 `[0,1,2,3] -> [-1,0,1,2]`，与 `pushing_dyn_explicit_double.py` 的实际表达式一致。
+  - 以下 smoke 和 3-seed 结果均为修正后重跑结果。
+
+smoke 命令：
+
+```bash
+/home/s110/miniconda3/envs/tt_5080/bin/python \
+  repro/scripts/run_planar_pushing_pam_proxy.py --preset smoke --device cpu --seed 0
+```
+
+smoke 结果：
+
+```text
+baseline_spa:      max_rank=13, mean_rank=8.80, storage=4367
+pam_local:         max_rank=12, mean_rank=7.00, storage=2930
+pam_contact_local: max_rank=12, mean_rank=7.20, storage=3124
+pam_theta_contact: max_rank=11, mean_rank=6.50, storage=2680
+bad_locality_only: max_rank=13, mean_rank=9.00, storage=6063
+bad_split:         max_rank=13, mean_rank=10.80, storage=6950
+face_local_only:   max_rank=12, mean_rank=7.70, storage=4100
+```
+
+当前可写结论：
+
+- `pam_local` 已调整为更符合参数-物理耦合的局部排布：`[current_face, next_face, theta, mass, pusher_x, pusher_y, friction, vx, vy]`。
+- 当前显式公式表明 `pusher_y` 同样是摩擦 cone 的局部耦合变量，因此只把 `[theta, friction, vx, vy]` 放近还不够。
+- 把 contact-local block 放近后，rank proxy 明显下降：
+  - `pam_theta_contact` max rank 从 baseline 的 13 降到 11。
+  - `pam_theta_contact` storage 从 baseline 的 4367 降到 2680。
+  - 新增负面对照 `bad_locality_only` storage 上升到 6063，`bad_split` 上升到 6950。
+- 这能作为 Planar Pushing PAM 证据链入口，但还不是 full TTPI 控制成功率实验。
+
+下一步：
+
+- 跑 `--preset proxy`，至少 seed=0,1,2。
+- 将 `pam_theta_contact` 作为当前 Planar Pushing 的候选 Local ordering。
+- 若进入 full TTPI 控制训练，需要实现 state/action/param reorder wrapper 或扩展 TTPI，使跨 state-action 的 mode interleaving 不破坏 `policy_ttgo` 的 state/action 切片假设。
+
+### 8.2 Planar Pushing rank-proxy 3-seed
+
+新增聚合脚本：
+
+- `repro/scripts/plot_planar_pushing_pam_proxy.py`
+
+新增聚合产物：
+
+- `repro/results/planar_pushing_pam_proxy_3seed_summary.csv`
+- `repro/figures/planar_pushing/planar_pushing_pam_proxy_3seed_max_rank.png`
+- `repro/figures/planar_pushing/planar_pushing_pam_proxy_3seed_mean_rank.png`
+- `repro/figures/planar_pushing/planar_pushing_pam_proxy_3seed_storage.png`
+
+正式 proxy 命令：
+
+```bash
+/home/s110/miniconda3/envs/tt_5080/bin/python \
+  repro/scripts/run_planar_pushing_pam_proxy.py --preset proxy --device cpu --seed 0
+/home/s110/miniconda3/envs/tt_5080/bin/python \
+  repro/scripts/run_planar_pushing_pam_proxy.py --preset proxy --device cpu --seed 1
+/home/s110/miniconda3/envs/tt_5080/bin/python \
+  repro/scripts/run_planar_pushing_pam_proxy.py --preset proxy --device cpu --seed 2
+/home/s110/miniconda3/envs/tt_5080/bin/python \
+  repro/scripts/plot_planar_pushing_pam_proxy.py
+```
+
+3-seed 汇总：
+
+```text
+baseline_spa:      max_rank=26.7±0.6,  mean_rank=14.83±0.21, storage=17701.0±521.0, ratio=1.000
+pam_local:         max_rank=16.7±0.6,  mean_rank=8.00±0.10,  storage=5845.0±190.2,  ratio=0.330
+pam_contact_local: max_rank=17.0±1.0,  mean_rank=8.10±0.10,  storage=5933.0±161.0,  ratio=0.336
+pam_theta_contact: max_rank=16.0±0.0,  mean_rank=7.40±0.00,  storage=5240.0±0.0,    ratio=0.296
+bad_locality_only: max_rank=28.7±0.6,  mean_rank=16.47±0.40, storage=34710.3±1700.9, ratio=1.963
+bad_split:         max_rank=29.0±0.0,  mean_rank=19.50±0.10, storage=35605.7±397.1,  ratio=2.013
+face_local_only:   max_rank=26.3±0.6,  mean_rank=13.37±0.15, storage=22464.7±475.9,  ratio=1.269
+```
+
+当前可以写成论文证据的结论：
+
+- 在参数增强的 Planar Pushing one-step proxy 上，只有把 face switching、姿态、接触点、摩擦和推动速度放成连续 contact-local block，才显著降低 TT rank/storage。
+- `pam_theta_contact` 相比 baseline `[states, params, actions]`：
+  - max rank 降至 60.0%。
+  - TT coefficients/storage 降至 29.6%。
+- 修正后的 `pam_local` 也有效：
+  - max rank 降至 62.5%。
+  - TT coefficients/storage 降至 33.0%。
+- 新增负面对照 `bad_locality_only` 把参数放链条最左、动作放中间、状态/接触变量放最右：
+  - storage 达到 baseline 的 196.3%。
+  - 这比随机打散更直接验证“参数-状态-动作强耦合被拉开会导致 TT 链条膨胀”。
+- `bad_split` storage 达到 baseline 的 201.3%，说明 rank 分布沿链条持续膨胀。
+- `face_local_only` 只保留 face 相关局部性但割裂 contact cone，storage 仍高于 baseline，支持“平面推物的瓶颈不是 face switching 单独造成，而是 contact nonlinear coupling”。
+
+仍不能写的结论：
+
+- 不能说已经完成未知摩擦下 100% 推物成功率。
+- 不能说 mass 已进入真实 quasi-static pushing dynamics；当前 mass 只进入 effort proxy。
+- 不能说当前结果是完整 PAM-RTTPI controller；它是 ordering/rank/domain-contraction proxy。
+
+### 8.3 Full TTPI 训练路径判断
+
+已核查 `ttpi.py`：
+
+- `TTPI.domain_state_action = domain_state + domain_action`。
+- `get_reward_model()`、`get_advantage_from_value()` 等都通过：
+  - `state = state_action[:, :self.dim_state]`
+  - `action = state_action[:, self.dim_state:]`
+  进行切片。
+- `policy_ttgo()` 依赖 `deterministic_top_k()`，同样假设前 `dim_state` 个 mode 是 condition state，后续 mode 是待优化 action。
+
+因此：
+
+- 完整跨 state/param/action 的 arbitrary interleaving 不能直接塞进现有 `TTPI` 而不改核心采样逻辑。
+- 短期可靠路径：
+  1. 做 parameter-augmented robust TTPI：`state_aug=[s, alpha]`，`forward_aug=[f(s,a;alpha), alpha]`。
+  2. 在 state block 内和 action block 内做保守重排，确保 `policy_ttgo` 的条件采样仍正确。
+  3. 把跨 block 的 `pam_theta_contact` 保留为 rank/domain-contraction proxy 证据。
+- 中期完整路径：
+  - 扩展 TTPI，使 condition modes 不再要求是前缀，并支持任意 mode permutation 下的 conditional action optimization。
+
+### 8.4 Parameter-Augmented Planar Pushing TTPI smoke
+
+新增脚本：
+
+- `repro/scripts/run_planar_pushing_augmented_ttpi.py`
+
+新增产物：
+
+- `repro/results/planar_pushing_augmented_ttpi_smoke_seed0.json`
+
+脚本定位：
+
+- 这是 full TTPI 训练入口的 smoke test。
+- 它保留 `domain_state + domain_action`，只在 state block 内比较：
+  - `baseline`: `[slider_x, slider_y, theta, pusher_x, pusher_y, current_face, mass, friction]`
+  - `contact_state`: `[slider_x, slider_y, current_face, theta, pusher_x, pusher_y, friction, mass]`
+- `forward_aug(state_aug, action)` 会输出 `[next_base_state, mass, friction]`，参数持久透传。
+- `friction` 进入接触动力学；`mass` 仍只进入 effort proxy。
+
+smoke 命令：
+
+```bash
+/home/s110/miniconda3/envs/tt_5080/bin/python \
+  repro/scripts/run_planar_pushing_augmented_ttpi.py --preset smoke --device cpu --seed 0
+```
+
+smoke 结果：
+
+```text
+baseline:
+  status=OK, time=4.335s
+  final success=0.000, final_pos_mean=0.1028, final_theta_abs_mean=1.1275
+  Ar_max=5, Vr_max=5, Pr_max=7
+
+contact_state:
+  status=OK, time=4.443s
+  final success=0.000, final_pos_mean=0.1039, final_theta_abs_mean=0.8585
+  Ar_max=5, Vr_max=4, Pr_max=7
+```
+
+解释：
+
+- 这证明 parameter-augmented Planar Pushing 已经能进入 TTPI reward TT、policy initialization、一次 value/advantage update 和 rollout evaluation。
+- 这个 smoke 的 horizon 只有 0.25s、训练只有 1 iteration，成功率为 0 不代表失败；它只验证 pipeline。
+- 运行中发现 TTPI 工具函数 `get_tt_max(... n_samples=100)` 对很小离散网格有 top-k 假设，因此 smoke preset 把前两个 state mode 网格设为 12，避免 `selected index k out of range`。
+
+下一步：
+
+- 跑 `--preset pilot --device cuda`，把训练迭代提高到 5~20，观察 `contact_state` 是否在同等预算下改善 final distance / orientation。
+- 如要证明未知摩擦成功率，需要固定训练摩擦网格和测试 off-grid 摩擦采样，并使用更长 horizon。
+
+## 9. 新阶段：Catch-Point 参数增强低维基准
+
+用户给出的任务二叙事：
+
+- Catch-Point (CP) 是低维混合动作空间基准。
+- 状态 `s in R^4`：系统质心二维位置与速度。
+- 动作 `a in R^2`：1 个离散足迹位置，1 个连续推力。
+- 参数增强 `alpha in R^1`：外部风力扰动系数或系统延迟。
+- 目标：证明 PAM/参数增强不会在低维任务中带来负面影响，并能快速收敛；用户期望训练时间低于 5 分钟并达到 100% 成功率。
+
+现有代码核查：
+
+- `repro/catch_point.py` 已有一个简化 CP 环境：
+  - state: `[x, y, vx, vy]`
+  - action: `[heading, move_flag]`
+  - 其中 `heading` 连续，`move_flag` 离散 `{0,1}`。
+- `repro/scripts/run_catch_point.py` 已能训练旧 CP baseline。
+- `repro/BASELINE.md` 记录旧 CP baseline：
+  - `n_state=100, n_action=100, n_iter=50`
+  - seed 0: `Best S=1.00, Best mu=1.00, Train Time=47s`
+
+本阶段口径：
+
+- 旧 CP baseline 可以作为“低维 TTPI 已能快速收敛”的历史证据。
+- 用户新任务要求的是参数增强 CP，因此需要新增独立脚本，不直接改旧 baseline。
+- 新脚本应采用 `state_aug=[x, y, vx, vy, wind]`，并让 `wind` 在 forward model 中持久透传。
+- 动作应改为更贴近任务描述的 `[footstep_id, force]`：
+  - `footstep_id` 是离散方向/足迹选择。
+  - `force` 是连续推力幅值。
+
+### 9.1 Augmented Catch-Point smoke
+
+新增脚本：
+
+- `repro/scripts/run_catch_point_augmented.py`
+
+新增产物：
+
+- `repro/results/catch_point_augmented_smoke_seed0.json`
+- `repro/results/catch_point_augmented_smoke_seed0.summary.csv`
+- `repro/figures/catchpoint_augmented/catch_point_augmented_smoke_baseline_seed0.png`
+- `repro/figures/catchpoint_augmented/catch_point_augmented_smoke_pam_local_seed0.png`
+- `repro/figures/catchpoint_augmented/catch_point_augmented_smoke_bad_locality_seed0.png`
+
+脚本建模：
+
+- state_aug:
+  - `[x, y, vx, vy, wind]`
+- action:
+  - `[footstep_id, force]`
+  - `footstep_id` 是离散方向选择。
+  - `force` 是连续推力幅值。
+- wind:
+  - 作为持久参数透传。
+  - 在动力学中进入 x 方向加速度。
+  - 训练网格范围 `[-0.25, 0.25]`，off-grid 测试范围 `[-0.35, 0.35]`。
+
+ordering：
+
+- `baseline`: `[x, y, vx, vy, wind]`
+- `pam_local`: `[x, vx, wind, y, vy]`
+- `bad_locality`: `[wind, y, vy, x, vx]`
+
+smoke 命令：
+
+```bash
+/home/s110/miniconda3/envs/tt_5080/bin/python \
+  repro/scripts/run_catch_point_augmented.py --preset smoke --device cpu --seed 0
+```
+
+smoke 结果：
+
+```text
+baseline:
+  status=OK, time=10.14s
+  nominal_success=0.000, offgrid_success=0.167
+  offgrid S×mu=0.148, final_dist_offgrid=0.151
+  Ar_max=8, Pr_max=10
+
+pam_local:
+  status=OK, time=9.29s
+  nominal_success=0.250, offgrid_success=0.250
+  offgrid S×mu=0.212, final_dist_offgrid=0.149
+  Ar_max=8, Pr_max=10
+
+bad_locality:
+  status=OK, time=9.38s
+  nominal_success=0.083, offgrid_success=0.083
+  offgrid S×mu=0.073, final_dist_offgrid=0.159
+  Ar_max=8, Pr_max=10
+```
+
+当前结论：
+
+- 参数增强 CP 的 7-mode TTPI pipeline 已跑通。
+- `pam_local` 在 smoke 预算下优于 baseline 与 `bad_locality`，但 smoke 只有 2 次 policy iteration、12 条测试轨迹，不能写成正式成功率结论。
+- 当前结果尚未达到用户目标的 100% 成功率；需要跑 `--preset pilot` 或进一步调 reward/action scale。
+- 旧 CP baseline 仍可作为“非参数增强 CP 可在 47s 达到 100%”的历史证据，但不能替代本次 wind-augmented CP。
+
+工具修复：
+
+- 修复 `tt_utils.deterministic_top_k()` 在第一个 TT mode 的离散点数小于默认 `n_samples=100` 时的候选重复 bug。
+- 原实现只重复了 `samples_idx`，没有同步重复 `p_cum`，导致后续 site 仍只有 `n_site_0 * n_site` 个候选却调用 `topk(k=100)`，在 `bad_locality=[wind,...]` 这种小参数 mode 置于链首时触发 `selected index k out of range`。
+- 修复后 `bad_locality` 能完整跑通，这对负面对照是必要条件。
+
+### 9.2 Augmented Catch-Point PAM pilot
+
+pilot 命令：
+
+```bash
+/home/s110/miniconda3/envs/tt_5080/bin/python \
+  repro/scripts/run_catch_point_augmented.py \
+  --preset pilot --device cpu --seed 0 \
+  --cases pam_local --n-iter 8 --callback-freq 2 \
+  --n-test 30 --horizon 4.0 \
+  --output-stem catch_point_augmented_pilot_pam_local_seed0_iter8
+```
+
+新增产物：
+
+- `repro/results/catch_point_augmented_pilot_pam_local_seed0_iter8.json`
+- `repro/results/catch_point_augmented_pilot_pam_local_seed0_iter8.summary.csv`
+- `repro/figures/catchpoint_augmented/catch_point_augmented_pilot_pam_local_seed0.png`
+
+pilot 结果：
+
+```text
+pam_local:
+  status=OK
+  train_time=64.86s
+  nominal_success=1.000
+  offgrid_success=1.000
+  nominal S×mu=0.665
+  offgrid S×mu=0.682
+  final_dist_offgrid=0.0137
+  Ar_max=16
+  Vr_max=6
+  Pr_max=18
+```
+
+解释：
+
+- 这已经满足用户给出的“低维 CP 训练时间小于 5 分钟并达到 100% 成功率”的 pilot 证据。
+- 该结果是在 CPU 上完成，训练时间约 65 秒；CUDA 应该还有余量。
+- off-grid wind 测试范围比训练范围更宽：
+  - training wind: `[-0.25, 0.25]`
+  - off-grid test wind: `[-0.35, 0.35]`
+- 当前仍是 seed=0 pilot；正式论文/表格建议补 `seed=1,2`，并固定同样的 30 或 50 条测试轨迹。
+
+当前可以写的结论：
+
+- 参数增强 CP 的 `pam_local=[x, vx, wind, y, vy]` 能在低维 7-mode 设置下快速稳定收敛。
+- 在 seed=0 pilot 中，PAM-augmented CP 达到 nominal/off-grid wind 双 100% 成功率。
+- 这支持“PAM 在低维任务中不会带来负面影响，并保留快速启动稳定性”。
+
+仍不能写的结论：
+
+- 不能把 seed=0 pilot 写成完整统计结论。
+- 不能直接和旧 `heading+move_flag` CP baseline 混为同一个 action model；新脚本使用的是 `[footstep_id, force]`。
+
+### 9.3 Augmented Catch-Point CUDA pilot, all orderings
+
+另有一组 CUDA pilot 全 ordering 结果：
+
+- `repro/results/catch_point_augmented_pilot_seed0.json`
+- `repro/results/catch_point_augmented_pilot_seed0.summary.csv`
+- `repro/figures/catchpoint_augmented/catch_point_augmented_pilot_baseline_seed0.png`
+- `repro/figures/catchpoint_augmented/catch_point_augmented_pilot_pam_local_seed0.png`
+- `repro/figures/catchpoint_augmented/catch_point_augmented_pilot_bad_locality_seed0.png`
+
+配置：
+
+```text
+preset=pilot, device=cuda, seed=0
+n_state=35, n_velocity=21, n_param=7
+n_footsteps=16, n_force=35
+n_test=50, horizon=6.0
+early_stop_success=0.95, early_stop_after_callback=5
+```
+
+结果：
+
+```text
+baseline:
+  status=EARLY_STOP, time=14.63s
+  nominal_success=1.000, offgrid_success=1.000
+  offgrid S×mu=0.664, final_dist_offgrid=0.0161
+  Ar_max=17, Vr_max=11, Pr_max=19
+
+pam_local:
+  status=EARLY_STOP, time=11.12s
+  nominal_success=1.000, offgrid_success=1.000
+  offgrid S×mu=0.660, final_dist_offgrid=0.0171
+  Ar_max=15, Vr_max=6, Pr_max=17
+
+bad_locality:
+  status=EARLY_STOP, time=10.88s
+  nominal_success=1.000, offgrid_success=1.000
+  offgrid S×mu=0.656, final_dist_offgrid=0.0190
+  Ar_max=15, Vr_max=7, Pr_max=17
+```
+
+解释：
+
+- 这组 CUDA pilot 显示低维 CP 的三种 ordering 都很容易达到 100% 成功率，符合“低维诊断沙盒”的预期。
+- `pam_local` 相比 baseline 在 rank 上更低：
+  - `Ar_max`: 15 vs 17
+  - `Vr_max`: 6 vs 11
+  - `Pr_max`: 17 vs 19
+- 因为 CP 维度很低，`bad_locality` 也能达到 100%，所以 CP 不适合作为强 ordering separation 的主证据；它更适合作为“PAM 无负面影响、启动稳定、参数增强鲁棒”的 sanity check。
