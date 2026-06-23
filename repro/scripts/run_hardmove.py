@@ -21,6 +21,7 @@ sys.path.insert(0, str(ROOT))
 
 from ttpi import TTPI
 from dynamic_systems import HardMove
+from repro.pam_ordering import build_hardmove_orders
 
 
 torch.set_default_dtype(torch.float64)
@@ -50,7 +51,15 @@ def make_init_states(n_test, state_min, state_max, device, seed):
 
 
 @torch.no_grad()
-def evaluate_policy(ttpi, dyn_system, init_state, dt, horizon_sec=10.0, target_radius=0.02):
+def evaluate_policy(
+    ttpi,
+    dyn_system,
+    init_state,
+    dt,
+    horizon_sec=10.0,
+    target_radius=0.02,
+    action_inverse=None,
+):
     state = init_state.clone()
     n = state.shape[0]
     T = int(horizon_sec / dt)
@@ -67,6 +76,8 @@ def evaluate_policy(ttpi, dyn_system, init_state, dt, horizon_sec=10.0, target_r
 
     for _ in range(T):
         action = ttpi.policy(state)
+        if action_inverse is not None:
+            action = action[..., action_inverse]
         r = dyn_system.reward_state_action(state, action)
         final_reward = r
         cum_reward += r
@@ -108,7 +119,16 @@ def evaluate_policy(ttpi, dyn_system, init_state, dt, horizon_sec=10.0, target_r
     return metrics
 
 @torch.no_grad()
-def save_trajectory_figure(ttpi, dyn_system, init_state, dt, fig_path, horizon_sec=10.0, max_traj=20):
+def save_trajectory_figure(
+    ttpi,
+    dyn_system,
+    init_state,
+    dt,
+    fig_path,
+    horizon_sec=10.0,
+    max_traj=20,
+    action_inverse=None,
+):
     state = init_state.clone()
     T = int(horizon_sec / dt)
     n_plot = min(max_traj, state.shape[0])
@@ -117,6 +137,8 @@ def save_trajectory_figure(ttpi, dyn_system, init_state, dt, fig_path, horizon_s
 
     for _ in range(T):
         action = ttpi.policy(state)
+        if action_inverse is not None:
+            action = action[..., action_inverse]
         state = dyn_system.forward_simulate(state, action)
         traj.append(state[:n_plot, :2].detach().cpu())
 
@@ -205,6 +227,25 @@ def main():
     parser.add_argument("--early-stop-after-callback", type=int, default=0)
     parser.add_argument("--vel-symmetric", action="store_true",
                         help="Use symmetric velocity domain [-vmax, vmax] instead of [0, vmax]")
+    parser.add_argument(
+        "--action-order",
+        choices=[
+            "local",
+            "badsplit",
+            "random",
+            "opposite_pair",
+            "pam_spectral",
+            "pam_greedy",
+            "pam_spectral_refined",
+            "pam_greedy_refined",
+        ],
+        default="local",
+        help="TT action-mode order. 'local' preserves the original TTPI HardMove layout.",
+    )
+    parser.add_argument("--order-random-seed", type=int, default=42)
+    parser.add_argument("--pam-pair-weight", type=float, default=10.0)
+    parser.add_argument("--pam-neighbor-weight", type=float, default=1.0)
+    parser.add_argument("--pam-opposite-weight", type=float, default=2.0)
 
 
     args = parser.parse_args()
@@ -225,6 +266,7 @@ def main():
     f"_state{args.n_state}"
     f"_action{args.n_action}"
     f"_iter{args.n_iter}"
+    f"_order{args.action_order}"
     f"_seed{args.seed}"
 )
 
@@ -256,7 +298,22 @@ def main():
         for i in range(len(state_max))
     ]
 
-    domain_action = [domain_acc0, domain_switch0] * args.n_actuator
+    domain_action_phys = [domain_acc0, domain_switch0] * args.n_actuator
+    coupling, order_results = build_hardmove_orders(
+        n_actuator=args.n_actuator,
+        random_seed=args.order_random_seed,
+        pair_weight=args.pam_pair_weight,
+        neighbor_weight=args.pam_neighbor_weight,
+        opposite_weight=args.pam_opposite_weight,
+    )
+    order_info = order_results[args.action_order]
+    action_order = order_info.order
+    action_inverse = torch.tensor(
+        [action_order.index(i) for i in range(2 * args.n_actuator)],
+        device=device,
+        dtype=torch.long,
+    )
+    domain_action = [domain_action_phys[i] for i in action_order]
 
     dyn_system = HardMove(
         dt=args.dt,
@@ -267,10 +324,10 @@ def main():
     )
 
     def forward_model(state, action):
-        return dyn_system.forward_simulate(state, action)
+        return dyn_system.forward_simulate(state, action[..., action_inverse])
 
     def reward(state, action):
-        return dyn_system.reward_state_action(state, action)
+        return dyn_system.reward_state_action(state, action[..., action_inverse])
 
     init_state = make_init_states(
         n_test=args.n_test,
@@ -306,6 +363,7 @@ def main():
             dt=args.dt,
             horizon_sec=10.0,
             target_radius=args.target_radius,
+            action_inverse=action_inverse,
         )
         metrics["callback_count"] = int(callback_count)
         metrics["S_times_mu"] = metrics["success_rate"] * metrics["mu_success"]
@@ -394,6 +452,7 @@ def main():
         dt=args.dt,
         horizon_sec=10.0,
         target_radius=args.target_radius,
+        action_inverse=action_inverse,
     )
     best_metrics = select_best_eval(eval_history)
 
@@ -444,6 +503,7 @@ def main():
         fig_path=fig_path,
         horizon_sec=10.0,
         max_traj=min(args.n_test, 20),
+        action_inverse=action_inverse,
     )
 
     result = {
@@ -475,6 +535,24 @@ def main():
         "eps_round_v": args.eps_round_v,
         "eps_round_a": args.eps_round_a,
         "n_samples": args.n_samples,
+        "action_order_name": args.action_order,
+        "action_order": action_order,
+        "action_inverse": [int(x) for x in action_inverse.detach().cpu().tolist()],
+        "pam_order_objective": order_info.objective,
+        "pam_order_adjacency_score": order_info.adjacency_score,
+        "pam_order_weights": {
+            "pair_weight": args.pam_pair_weight,
+            "neighbor_weight": args.pam_neighbor_weight,
+            "opposite_weight": args.pam_opposite_weight,
+        },
+        "pam_all_order_metrics": {
+            name: {
+                "order": result.order,
+                "objective": result.objective,
+                "adjacency_score": result.adjacency_score,
+            }
+            for name, result in order_results.items()
+        },
         "train_time_sec": train_time_sec,
         "final_metrics": final_metrics,
         "eval_history": eval_history,
