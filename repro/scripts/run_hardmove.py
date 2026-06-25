@@ -22,6 +22,14 @@ sys.path.insert(0, str(ROOT))
 from ttpi import TTPI
 from dynamic_systems import HardMove
 from repro.pam_ordering import build_hardmove_orders
+from repro.diagnostics import (
+    append_csv,
+    cross_query_rows,
+    rank_profile_rows,
+    summary_row,
+    tensor_safe,
+    write_csv,
+)
 
 
 torch.set_default_dtype(torch.float64)
@@ -59,6 +67,7 @@ def evaluate_policy(
     horizon_sec=10.0,
     target_radius=0.02,
     action_inverse=None,
+    action_transform=None,
 ):
     state = init_state.clone()
     n = state.shape[0]
@@ -78,6 +87,8 @@ def evaluate_policy(
         action = ttpi.policy(state)
         if action_inverse is not None:
             action = action[..., action_inverse]
+        if action_transform is not None:
+            action = action_transform(action)
         r = dyn_system.reward_state_action(state, action)
         final_reward = r
         cum_reward += r
@@ -128,6 +139,7 @@ def save_trajectory_figure(
     horizon_sec=10.0,
     max_traj=20,
     action_inverse=None,
+    action_transform=None,
 ):
     state = init_state.clone()
     T = int(horizon_sec / dt)
@@ -139,6 +151,8 @@ def save_trajectory_figure(
         action = ttpi.policy(state)
         if action_inverse is not None:
             action = action[..., action_inverse]
+        if action_transform is not None:
+            action = action_transform(action)
         state = dyn_system.forward_simulate(state, action)
         traj.append(state[:n_plot, :2].detach().cpu())
 
@@ -238,10 +252,24 @@ def main():
             "pam_greedy",
             "pam_spectral_refined",
             "pam_greedy_refined",
+            "block_pam",
+            "free_pam",
+            "sensitivity_pam",
+            "rankaware_proxy_pam",
+            "rankaware_spectral_pam",
+            "hybrid_pam",
         ],
         default="local",
         help="TT action-mode order. 'local' preserves the original TTPI HardMove layout.",
     )
+    parser.add_argument(
+        "--env-variant",
+        choices=["standard", "index_permuted", "cross_coupled"],
+        default="standard",
+        help="HardMove stress-test variant.",
+    )
+    parser.add_argument("--env-permutation-seed", type=int, default=2026)
+    parser.add_argument("--cross-coupling-strength", type=float, default=0.25)
     parser.add_argument("--order-random-seed", type=int, default=42)
     parser.add_argument("--pam-pair-weight", type=float, default=10.0)
     parser.add_argument("--pam-neighbor-weight", type=float, default=1.0)
@@ -261,14 +289,17 @@ def main():
     out_dir.mkdir(parents=True, exist_ok=True)
     model_dir.mkdir(parents=True, exist_ok=True)
 
+    env_name = f"HM{args.n_actuator}"
+    if args.env_variant != "standard":
+        env_name = f"{env_name}_{args.env_variant}"
     task_name = (
-    f"HM{args.n_actuator}"
-    f"_state{args.n_state}"
-    f"_action{args.n_action}"
-    f"_iter{args.n_iter}"
-    f"_order{args.action_order}"
-    f"_seed{args.seed}"
-)
+        f"{env_name}"
+        f"_state{args.n_state}"
+        f"_action{args.n_action}"
+        f"_iter{args.n_iter}"
+        f"_order{args.action_order}"
+        f"_seed{args.seed}"
+    )
 
     L = 1.0
     position_max = L
@@ -323,11 +354,36 @@ def main():
         device=device,
     )
 
+    env_permutation = list(range(args.n_actuator))
+    if args.env_variant == "index_permuted":
+        g_perm = torch.Generator(device="cpu")
+        g_perm.manual_seed(args.env_permutation_seed + args.n_actuator)
+        env_permutation = torch.randperm(args.n_actuator, generator=g_perm).tolist()
+
+    env_permutation_t = torch.tensor(env_permutation, device=device, dtype=torch.long)
+
+    def transform_physical_action(action_phys):
+        action_phys = action_phys.clone()
+        if args.env_variant == "index_permuted":
+            reshaped = action_phys.view(-1, args.n_actuator, 2)
+            action_phys = reshaped[:, env_permutation_t, :].reshape(action_phys.shape)
+        elif args.env_variant == "cross_coupled":
+            reshaped = action_phys.view(-1, args.n_actuator, 2).clone()
+            acc = reshaped[:, :, 0]
+            sw = reshaped[:, :, 1]
+            left = torch.roll(acc, shifts=1, dims=1)
+            right = torch.roll(acc, shifts=-1, dims=1)
+            acc_mixed = acc + args.cross_coupling_strength * 0.5 * (left + right)
+            reshaped[:, :, 0] = acc_mixed
+            reshaped[:, :, 1] = sw
+            action_phys = reshaped.reshape(action_phys.shape)
+        return action_phys
+
     def forward_model(state, action):
-        return dyn_system.forward_simulate(state, action[..., action_inverse])
+        return dyn_system.forward_simulate(state, transform_physical_action(action[..., action_inverse]))
 
     def reward(state, action):
-        return dyn_system.reward_state_action(state, action[..., action_inverse])
+        return dyn_system.reward_state_action(state, transform_physical_action(action[..., action_inverse]))
 
     init_state = make_init_states(
         n_test=args.n_test,
@@ -364,6 +420,7 @@ def main():
             horizon_sec=10.0,
             target_radius=args.target_radius,
             action_inverse=action_inverse,
+            action_transform=transform_physical_action,
         )
         metrics["callback_count"] = int(callback_count)
         metrics["S_times_mu"] = metrics["success_rate"] * metrics["mu_success"]
@@ -444,6 +501,9 @@ def main():
         print("[INFO] training stopped early by evaluation criterion")
 
     train_time_sec = time.time() - t0
+    peak_memory_mb = (
+        torch.cuda.max_memory_allocated() / 1e6 if torch.cuda.is_available() else None
+    )
 
     final_metrics = evaluate_policy(
         ttpi=ttpi,
@@ -453,6 +513,7 @@ def main():
         horizon_sec=10.0,
         target_radius=args.target_radius,
         action_inverse=action_inverse,
+        action_transform=transform_physical_action,
     )
     best_metrics = select_best_eval(eval_history)
 
@@ -504,10 +565,15 @@ def main():
         horizon_sec=10.0,
         max_traj=min(args.n_test, 20),
         action_inverse=action_inverse,
+        action_transform=transform_physical_action,
     )
 
     result = {
         "task": f"HM({args.n_actuator})",
+        "env_name": env_name,
+        "env_variant": args.env_variant,
+        "env_permutation": env_permutation,
+        "cross_coupling_strength": args.cross_coupling_strength,
         "seed": args.seed,
         "n_state": args.n_state,
         "n_action": args.n_action,
@@ -540,6 +606,9 @@ def main():
         "action_inverse": [int(x) for x in action_inverse.detach().cpu().tolist()],
         "pam_order_objective": order_info.objective,
         "pam_order_adjacency_score": order_info.adjacency_score,
+        "pam_order_peak_cut_objective": order_info.metadata.get("peak_cut_objective"),
+        "pam_order_rankaware_proxy_objective": order_info.metadata.get("rankaware_proxy_objective"),
+        "pam_order_block_preserving": order_info.metadata.get("block_preserving"),
         "pam_order_weights": {
             "pair_weight": args.pam_pair_weight,
             "neighbor_weight": args.pam_neighbor_weight,
@@ -550,6 +619,9 @@ def main():
                 "order": result.order,
                 "objective": result.objective,
                 "adjacency_score": result.adjacency_score,
+                "peak_cut_objective": result.metadata.get("peak_cut_objective"),
+                "rankaware_proxy_objective": result.metadata.get("rankaware_proxy_objective"),
+                "block_preserving": result.metadata.get("block_preserving"),
             }
             for name, result in order_results.items()
         },
@@ -563,6 +635,7 @@ def main():
         "max_cuda_mem_gb": (
             torch.cuda.max_memory_allocated() / 1e9 if torch.cuda.is_available() else None
         ),
+        "peak_memory_mb": peak_memory_mb,
         "trajectory_figure": traj_fig,
         "best_metrics": best_metrics,
         "best_tradeoff_metrics": best_tradeoff["metrics"],
@@ -571,13 +644,48 @@ def main():
         "early_stop_success": args.early_stop_success,
         "early_stop_mu": args.early_stop_mu,
         "early_stop_after_callback": args.early_stop_after_callback,
+        "train_data": tensor_safe(ttpi.train_data),
+        "diagnostics": tensor_safe(ttpi.diagnostics),
     }
 
     out_file = out_dir / f"{task_name}.json"
     with open(out_file, "w", encoding="utf-8") as f:
-        json.dump(result, f, indent=2, ensure_ascii=False)
+        json.dump(tensor_safe(result), f, indent=2, ensure_ascii=False)
+
+    diagnostics_dir = ROOT / "repro" / "diagnostics"
+    rank_rows = rank_profile_rows(
+        task_name=task_name,
+        seed=args.seed,
+        env_name=env_name,
+        ordering_name=args.action_order,
+        train_data=ttpi.train_data,
+    )
+    cross_rows = cross_query_rows(
+        task_name=task_name,
+        seed=args.seed,
+        env_name=env_name,
+        ordering_name=args.action_order,
+        diagnostics=ttpi.diagnostics,
+    )
+    rank_csv = diagnostics_dir / "rank_profiles" / f"{task_name}.rank_profile.csv"
+    cross_csv = diagnostics_dir / "cross_queries" / f"{task_name}.cross_queries.csv"
+    summary_csv = diagnostics_dir / "pam_ablation_summary.csv"
+    write_csv(rank_csv, rank_rows)
+    write_csv(cross_csv, cross_rows)
+    append_csv(
+        summary_csv,
+        summary_row(
+            result=result,
+            train_data=ttpi.train_data,
+            diagnostics=ttpi.diagnostics,
+            peak_memory_mb=peak_memory_mb,
+        ),
+    )
 
     print(f"[DONE] saved result to {out_file}")
+    print(f"[DONE] saved rank diagnostics to {rank_csv}")
+    print(f"[DONE] saved TT-Cross diagnostics to {cross_csv}")
+    print(f"[DONE] appended summary to {summary_csv}")
     print(json.dumps(result["final_metrics"], indent=2, ensure_ascii=False))
 
 if __name__ == "__main__":

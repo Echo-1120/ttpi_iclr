@@ -12,6 +12,8 @@ __pycache__/
 # Large or generated experiment artifacts
 repro/logs/
 repro/models/
+repro/diagnostics/
+repro/figures/pam_diagnostics/
 repro/archive/
 
 # Ad-hoc model/checkpoint outputs

@@ -39,6 +39,17 @@ import math
 
 from tt_utils import *
 
+def _rank_profile(tt_model):
+    """Return internal TT ranks as a plain Python list."""
+    ranks = tt_model.ranks_tt
+    if torch.is_tensor(ranks):
+        values = [int(x) for x in ranks.detach().cpu().view(-1).tolist()]
+    else:
+        values = [int(x) for x in ranks]
+    if len(values) >= 2 and values[0] == 1 and values[-1] == 1:
+        return values[1:-1]
+    return values
+
 class TTPI:
     def __init__(self, 
         domain_state, domain_action, 
@@ -129,6 +140,13 @@ class TTPI:
             self.interpolated_state = interpolated_state
         
         self.normalize_reward = normalize_reward
+        self.diagnostics = {
+            "tt_cross_calls": 0,
+            "tt_cross_function_evals": 0,
+            "queried_points_total": 0,
+            "cross_call_history": [],
+            "round_events": [],
+        }
             
 
     @torch.no_grad()
@@ -184,9 +202,12 @@ class TTPI:
         self.policy_model_cores = self.policy_model.tt().cores[:]
         # print("Rank of reward-model: ", (self.reward_normalized_tt.ranks_tt))
         self.train_data = { "v_norm":[],  "v_mean":[], "v_rank":[],
+                            "v_rank_profile":[],
                             "a_norm":[],  "a_mean":[], "a_rank":[],
+                            "a_rank_profile":[],
                             "q_norm":[],  "q_mean":[], "q_rank":[], 
                             "p_norm":[],  "p_mean":[], "p_rank":[], 
+                            "p_rank_profile":[],
                             "final_reward":[], 
                             "cum_reward":[],
                             "dv_norm":[]}
@@ -244,9 +265,11 @@ class TTPI:
             v_model = self.compute_value_model(v_model).to(self.device) # updates value model
             if n_iter_v>1:
                 v_model.round_tt(self.eps_round_v)
+                self._record_round_event("value", i, v_model)
                 print("Iteration:{}, Rank of v-model:{}".format(i,v_model.ranks_tt))
         self.v_model = v_model.clone()
         self.a_model = self.compute_advantage_model_from_value().to(self.device)
+        self._record_round_event("advantage", n_iter_v, self.a_model)
 
     def VI_update(self):
         '''
@@ -715,10 +738,53 @@ class TTPI:
             TT-Cross Approximation
             eps: precentage change in the norm of tt per iteration of tt-cross
          '''
-        tt_model = cross_approximate(fcn=fcn,max_batch=max_batch, domain=domain, 
+        diag = getattr(self, "diagnostics", None)
+        call_index = None
+        start_evals = None
+        if diag is not None:
+            diag["tt_cross_calls"] = int(diag.get("tt_cross_calls", 0)) + 1
+            call_index = diag["tt_cross_calls"]
+            start_evals = int(diag.get("tt_cross_function_evals", 0))
+
+        def counted_fcn(x):
+            if diag is not None:
+                n_query = int(x.shape[0])
+                diag["tt_cross_function_evals"] = int(diag.get("tt_cross_function_evals", 0)) + n_query
+                diag["queried_points_total"] = int(diag.get("queried_points_total", 0)) + n_query
+            return fcn(x)
+
+        tt_model = cross_approximate(fcn=counted_fcn,max_batch=max_batch, domain=domain,
                         rmax=rmax, nswp=nswp, eps=eps, verbose=verbose, 
                         kickrank=kickrank, device=self.device)
+        if diag is not None:
+            end_evals = int(diag.get("tt_cross_function_evals", 0))
+            diag.setdefault("cross_call_history", []).append({
+                "call_index": int(call_index),
+                "function_name": getattr(fcn, "__name__", "anonymous"),
+                "domain_dim": int(len(domain)),
+                "domain_sizes": [int(len(x)) for x in domain],
+                "max_batch": int(max_batch),
+                "rmax": int(rmax),
+                "nswp": int(nswp),
+                "eps": float(eps),
+                "kickrank": int(kickrank),
+                "function_eval_requests": int(end_evals - start_evals),
+                "queried_points": int(end_evals - start_evals),
+                "rank_profile": _rank_profile(tt_model),
+                "rank_max": int(max(_rank_profile(tt_model), default=1)),
+            })
         return tt_model.to(self.device)
+
+    def _record_round_event(self, model_name, iteration, tt_model):
+        diag = getattr(self, "diagnostics", None)
+        if diag is None:
+            return
+        diag.setdefault("round_events", []).append({
+            "model": str(model_name),
+            "iteration": int(iteration),
+            "rank_profile": _rank_profile(tt_model),
+            "rank_max": int(max(_rank_profile(tt_model), default=1)),
+        })
 
 
     def get_elements(self, tt_model, idx):
@@ -773,6 +839,9 @@ class TTPI:
         self.train_data['v_rank'].append((self.v_model.ranks_tt).max().item())
         self.train_data['a_rank'].append((self.a_model.ranks_tt).max().item())
         self.train_data['p_rank'].append((self.policy_model.ranks_tt).max().item())
+        self.train_data['v_rank_profile'].append(_rank_profile(self.v_model))
+        self.train_data['a_rank_profile'].append(_rank_profile(self.a_model))
+        self.train_data['p_rank_profile'].append(_rank_profile(self.policy_model))
         print("v_min: {:.2f}, v_mean: {:.2f}, v_max: {:.2f}".format(self.v_min, 
                                                     self.v_mean, self.v_max))
         print("a_min: {:.2f}, a_mean: {:.2f}, a_max: {:.2f}".format(self.a_min, 
@@ -792,7 +861,5 @@ class TTPI:
         'reward_tt':self.reward_tt,
         'train_data':self.train_data
         },file_name+'.pt') # save the value model
-
-
 
 

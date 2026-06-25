@@ -52,6 +52,9 @@ def main() -> int:
                 "order": result.order,
                 "objective": result.objective,
                 "adjacency_score": result.adjacency_score,
+                "peak_cut_objective": result.metadata.get("peak_cut_objective"),
+                "rankaware_proxy_objective": result.metadata.get("rankaware_proxy_objective"),
+                "block_preserving": result.metadata.get("block_preserving"),
                 "metadata": result.metadata,
             }
             for name, result in orders.items()
@@ -63,9 +66,14 @@ def main() -> int:
     out.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
     print(f"Saved: {out}")
-    print(f"{'name':<24} {'objective':>12} {'adjacency':>12} order")
+    print(f"{'name':<24} {'LA':>12} {'peak-cut':>12} {'rankaware':>12} {'adjacency':>12} order")
     for name, result in sorted(orders.items(), key=lambda item: item[1].objective):
-        print(f"{name:<24} {result.objective:12.2f} {result.adjacency_score:12.2f} {result.order}")
+        print(
+            f"{name:<24} {result.objective:12.2f} "
+            f"{result.metadata.get('peak_cut_objective', 0.0):12.2f} "
+            f"{result.metadata.get('rankaware_proxy_objective', 0.0):12.2f} "
+            f"{result.adjacency_score:12.2f} {result.order}"
+        )
     return 0
 
 

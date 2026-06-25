@@ -53,6 +53,46 @@ def adjacency_score(order: Iterable[int], coupling: Matrix) -> float:
     return float(sum(float(coupling[order[i]][order[i + 1]]) for i in range(len(order) - 1)))
 
 
+def peak_cut_cost(order: Iterable[int], coupling: Matrix) -> float:
+    """Maximum weighted edge mass crossing any TT cut."""
+    order = validate_order(order, len(coupling))
+    pos = {mode: idx for idx, mode in enumerate(order)}
+    peak = 0.0
+    for cut in range(1, len(order)):
+        left = {mode for mode, idx in pos.items() if idx < cut}
+        cost = 0.0
+        for i in left:
+            for j in range(len(order)):
+                if j not in left:
+                    cost += float(coupling[i][j])
+        peak = max(peak, cost)
+    return float(peak)
+
+
+def rankaware_proxy_cost(
+    order: Iterable[int],
+    coupling: Matrix,
+    lambda_sum: float = 1.0,
+    lambda_peak: float = 1.0,
+) -> float:
+    """Rank-aware surrogate from cut masses."""
+    import math
+
+    order = validate_order(order, len(coupling))
+    pos = {mode: idx for idx, mode in enumerate(order)}
+    cut_loads = []
+    for cut in range(1, len(order)):
+        left = {mode for mode, idx in pos.items() if idx < cut}
+        cost = 0.0
+        for i in left:
+            for j in range(len(order)):
+                if j not in left:
+                    cost += float(coupling[i][j])
+        cut_loads.append(cost)
+    logs = [math.log1p(max(0.0, x)) for x in cut_loads]
+    return float(lambda_sum * sum(logs) + lambda_peak * max(logs, default=0.0))
+
+
 def hardmove_action_coupling(
     n_actuator: int,
     pair_weight: float = 10.0,
@@ -99,6 +139,21 @@ def hardmove_action_coupling(
                     add(left, right, opposite_weight)
 
     return coupling
+
+
+def actuator_blocks(n_actuator: int) -> list[list[int]]:
+    return [[2 * i, 2 * i + 1] for i in range(n_actuator)]
+
+
+def block_coupling(coupling: Matrix, blocks: list[list[int]]) -> Matrix:
+    n_blocks = len(blocks)
+    out = [[0.0 for _ in range(n_blocks)] for _ in range(n_blocks)]
+    for i, left in enumerate(blocks):
+        for j, right in enumerate(blocks):
+            if i == j:
+                continue
+            out[i][j] = float(sum(coupling[a][b] for a in left for b in right))
+    return out
 
 
 def local_pair_order(n_actuator: int) -> list[int]:
@@ -166,10 +221,22 @@ def _weighted_bfs_order(coupling: Matrix) -> list[int]:
 def spectral_order(coupling: Matrix) -> list[int]:
     """Return a deterministic graph order.
 
-    The name is kept for CLI compatibility. The implementation is dependency-free
-    because experiment environments may not have numpy installed on the client.
+    Uses a Fiedler-vector order when numpy is available; otherwise falls back to
+    a dependency-free weighted BFS chain.
     """
-    return _weighted_bfs_order(coupling)
+    try:
+        import numpy as np
+
+        W = np.asarray(coupling, dtype=float)
+        if W.shape[0] <= 2:
+            return list(range(W.shape[0]))
+        D = np.diag(W.sum(axis=1))
+        L = D - W
+        vals, vecs = np.linalg.eigh(L)
+        fiedler = vecs[:, 1]
+        return [int(i) for i in np.argsort(fiedler, kind="mergesort")]
+    except Exception:
+        return _weighted_bfs_order(coupling)
 
 
 def greedy_adjacent_order(coupling: Matrix) -> list[int]:
@@ -232,6 +299,69 @@ def improve_by_adjacent_swaps(order: Iterable[int], coupling: Matrix, max_passes
     return current
 
 
+def improve_by_2opt(order: Iterable[int], coupling: Matrix, max_passes: int = 20) -> list[int]:
+    """2-opt local search for the weighted linear arrangement objective."""
+    current = validate_order(order, len(coupling))
+    current_cost = weighted_linear_arrangement(current, coupling)
+    n = len(current)
+    for _ in range(max_passes):
+        improved = False
+        for i in range(n - 1):
+            for j in range(i + 2, n + 1):
+                candidate = current[:i] + list(reversed(current[i:j])) + current[j:]
+                candidate_cost = weighted_linear_arrangement(candidate, coupling)
+                if candidate_cost + 1e-12 < current_cost:
+                    current = candidate
+                    current_cost = candidate_cost
+                    improved = True
+        if not improved:
+            break
+    return current
+
+
+def block_preserving_order(
+    n_actuator: int,
+    coupling: Matrix,
+    allow_internal_flip: bool = True,
+) -> list[int]:
+    """Order actuator blocks while preserving [acc_i, sw_i] adjacency."""
+    blocks = actuator_blocks(n_actuator)
+    Wb = block_coupling(coupling, blocks)
+    block_order = spectral_order(Wb)
+    block_order = improve_by_2opt(block_order, Wb)
+    ordered_blocks = [list(blocks[i]) for i in block_order]
+    if allow_internal_flip:
+        for idx, block in enumerate(ordered_blocks):
+            candidate_blocks = [list(b) for b in ordered_blocks]
+            candidate_blocks[idx] = list(reversed(block))
+            candidate = [mode for b in candidate_blocks for mode in b]
+            current = [mode for b in ordered_blocks for mode in b]
+            if weighted_linear_arrangement(candidate, coupling) < weighted_linear_arrangement(current, coupling):
+                ordered_blocks[idx] = list(reversed(block))
+    return [mode for block in ordered_blocks for mode in block]
+
+
+def free_pam_order(coupling: Matrix) -> list[int]:
+    return improve_by_2opt(spectral_order(coupling), coupling)
+
+
+def sensitivity_weighted_coupling(base: Matrix, n_actuator: int) -> Matrix:
+    """Deterministic sensitivity proxy that emphasizes neighboring thrust axes."""
+    out = [[float(x) for x in row] for row in base]
+    for i in range(n_actuator):
+        for j in range(n_actuator):
+            if i == j:
+                continue
+            angular = abs(i - j)
+            angular = min(angular, n_actuator - angular)
+            weight = 1.0 / (1.0 + angular)
+            for left in (2 * i, 2 * i + 1):
+                for right in (2 * j, 2 * j + 1):
+                    out[left][right] += weight
+                    out[right][left] += weight
+    return out
+
+
 def build_hardmove_orders(
     n_actuator: int,
     random_seed: int = 42,
@@ -257,6 +387,33 @@ def build_hardmove_orders(
     }
     candidates["pam_spectral_refined"] = improve_by_adjacent_swaps(candidates["pam_spectral"], coupling)
     candidates["pam_greedy_refined"] = improve_by_adjacent_swaps(candidates["pam_greedy"], coupling)
+    candidates["block_pam"] = block_preserving_order(n_actuator, coupling, allow_internal_flip=True)
+    candidates["free_pam"] = free_pam_order(coupling)
+
+    sensitivity_coupling = sensitivity_weighted_coupling(coupling, n_actuator)
+    candidates["sensitivity_pam"] = block_preserving_order(
+        n_actuator, sensitivity_coupling, allow_internal_flip=True
+    )
+    candidates["rankaware_proxy_pam"] = min(
+        [
+            candidates["local"],
+            candidates["pam_spectral"],
+            candidates["pam_greedy"],
+            candidates["block_pam"],
+            candidates["free_pam"],
+            random_order(n_actuator, random_seed + 1009),
+        ],
+        key=lambda order: rankaware_proxy_cost(order, coupling, lambda_sum=1.0, lambda_peak=2.0),
+    )
+    candidates["rankaware_spectral_pam"] = candidates["rankaware_proxy_pam"]
+    hybrid_coupling = [
+        [
+            0.5 * float(coupling[i][j]) + 0.5 * float(sensitivity_coupling[i][j])
+            for j in range(len(coupling))
+        ]
+        for i in range(len(coupling))
+    ]
+    candidates["hybrid_pam"] = block_preserving_order(n_actuator, hybrid_coupling, allow_internal_flip=True)
 
     results: dict[str, OrderingResult] = {}
     for name, order in candidates.items():
@@ -272,6 +429,14 @@ def build_hardmove_orders(
                 "neighbor_weight": neighbor_weight,
                 "opposite_weight": opposite_weight,
                 "random_seed": random_seed,
+                "peak_cut_objective": peak_cut_cost(order, coupling),
+                "rankaware_proxy_objective": rankaware_proxy_cost(
+                    order, coupling, lambda_sum=1.0, lambda_peak=2.0
+                ),
+                "block_preserving": all(
+                    abs(order.index(2 * i) - order.index(2 * i + 1)) == 1
+                    for i in range(n_actuator)
+                ),
             },
         )
     return coupling, results
