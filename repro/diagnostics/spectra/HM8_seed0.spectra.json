@@ -1,0 +1,18 @@
+{
+  "env": "HM8",
+  "n_actuator": 8,
+  "env_variant": "standard",
+  "orderings": [
+    "local",
+    "block_pam",
+    "rankaware_proxy_pam",
+    "hybrid_pam"
+  ],
+  "thresholds": [
+    0.1,
+    0.05,
+    0.01
+  ],
+  "detail_csv": "/home/s110/code/ttpi_iclr/repro/diagnostics/spectra/HM8_seed0.singular_values.csv",
+  "summary_csv": "/home/s110/code/ttpi_iclr/repro/diagnostics/spectra/HM8_seed0.effective_ranks.csv"
+}
