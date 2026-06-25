@@ -1,0 +1,23 @@
+\section{Experiments}
+
+All numbers in this section should be generated from repository artifacts using
+\path{repro/scripts/sync_paper_artifacts.py}.
+
+\subsection{Diagnostic Smoke Test}
+
+\input{tables/pam_diagnostics_summary}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.72\linewidth]{peak_memory_vs_ordering.png}
+  \caption{Peak memory by ordering. This figure is generated from
+  repository diagnostics and should be regenerated after each experiment round.}
+  \label{fig:peak-memory-ordering}
+\end{figure}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.72\linewidth]{tt_actual_rank_profile_by_ordering.png}
+  \caption{Actual TT rank profile by ordering.}
+  \label{fig:actual-rank-profile}
+\end{figure}

@@ -21,5 +21,16 @@ repro/archive/
 *.pth
 ttdp_model.pt
 
+# LaTeX build artifacts
+paper/*.aux
+paper/*.bbl
+paper/*.blg
+paper/*.fdb_latexmk
+paper/*.fls
+paper/*.log
+paper/*.out
+paper/*.pdf
+paper/*.synctex.gz
+
 # Local paper/source copies
 9245_Generalized_Policy_Iterat.pdf

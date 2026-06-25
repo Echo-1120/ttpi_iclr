@@ -1,0 +1,16 @@
+\section{Method}
+
+We define physics-aware mode reordering (PAM) as a family of permutations over
+HardMove action modes. The baseline physical layout is
+\([acc_0, sw_0, acc_1, sw_1,\ldots]\). Block-preserving PAM treats
+\([acc_i, sw_i]\) as an actuator block, builds a block coupling graph, initializes
+a spectral order, and applies local search while preserving actuator adjacency.
+
+The rank-aware surrogate used in the repository is
+\begin{equation}
+J_{\mathrm{rank}}(\pi) =
+\lambda_{\mathrm{sum}}\sum_k \log(1 + r_k(\pi)) +
+\lambda_{\mathrm{peak}}\max_k \log(1 + r_k(\pi)),
+\end{equation}
+where \(r_k\) is estimated either from cached singular spectra or from a
+segment-coupling proxy.
