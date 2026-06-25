@@ -186,7 +186,8 @@ def plot_effective_rank(eff_rows: list[dict[str, str]], path: Path) -> None:
     if not eff_rows:
         save_placeholder(path, title, "No effective-rank CSV files found.")
         return
-    rank_key = next((k for k in eff_rows[0] if k.startswith("effective_rank_relerr_")), None)
+    rank_key = next((k for k in eff_rows[0] if k.startswith("effective_rank_sigma1_rel_")), None)
+    rank_key = rank_key or next((k for k in eff_rows[0] if k.startswith("effective_rank_relerr_")), None)
     if rank_key is None:
         save_placeholder(path, title, "Effective-rank columns are missing.")
         return
@@ -213,7 +214,8 @@ def plot_proxy_vs_actual(eff_rows: list[dict[str, str]], rank_rows: list[dict[st
     if not eff_rows or not rank_rows:
         save_placeholder(path, title, "Need both singular spectra and TT rank profiles.")
         return
-    rank_key = next((k for k in eff_rows[0] if k.startswith("effective_rank_relerr_")), None)
+    rank_key = next((k for k in eff_rows[0] if k.startswith("effective_rank_sigma1_rel_")), None)
+    rank_key = rank_key or next((k for k in eff_rows[0] if k.startswith("effective_rank_relerr_")), None)
     actual: dict[tuple[str, int], list[float]] = defaultdict(list)
     for row in rank_rows:
         ordering = row.get("ordering", "unknown")

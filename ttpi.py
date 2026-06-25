@@ -50,6 +50,11 @@ def _rank_profile(tt_model):
         return values[1:-1]
     return values
 
+def _cuda_memory_mb():
+    if torch.cuda.is_available():
+        return float(torch.cuda.memory_allocated() / 1e6)
+    return None
+
 class TTPI:
     def __init__(self, 
         domain_state, domain_action, 
@@ -145,6 +150,7 @@ class TTPI:
             "tt_cross_function_evals": 0,
             "queried_points_total": 0,
             "cross_call_history": [],
+            "cross_process_events": [],
             "round_events": [],
         }
             
@@ -264,12 +270,13 @@ class TTPI:
         for i in range(n_iter_v):
             v_model = self.compute_value_model(v_model).to(self.device) # updates value model
             if n_iter_v>1:
+                self._record_round_event("value", i, v_model, stage="before_round")
                 v_model.round_tt(self.eps_round_v)
-                self._record_round_event("value", i, v_model)
+                self._record_round_event("value", i, v_model, stage="after_round")
                 print("Iteration:{}, Rank of v-model:{}".format(i,v_model.ranks_tt))
         self.v_model = v_model.clone()
         self.a_model = self.compute_advantage_model_from_value().to(self.device)
-        self._record_round_event("advantage", n_iter_v, self.a_model)
+        self._record_round_event("advantage", n_iter_v, self.a_model, stage="after_compute")
 
     def VI_update(self):
         '''
@@ -741,6 +748,8 @@ class TTPI:
         diag = getattr(self, "diagnostics", None)
         call_index = None
         start_evals = None
+        start_time = time.perf_counter()
+        start_memory_mb = _cuda_memory_mb()
         if diag is not None:
             diag["tt_cross_calls"] = int(diag.get("tt_cross_calls", 0)) + 1
             call_index = diag["tt_cross_calls"]
@@ -753,11 +762,30 @@ class TTPI:
                 diag["queried_points_total"] = int(diag.get("queried_points_total", 0)) + n_query
             return fcn(x)
 
+        def record_cross_event(stage, tt_model):
+            if diag is None:
+                return
+            rank_profile = _rank_profile(tt_model)
+            evals_so_far = int(diag.get("tt_cross_function_evals", 0)) - int(start_evals)
+            diag.setdefault("cross_process_events", []).append({
+                "call_index": int(call_index),
+                "function_name": getattr(fcn, "__name__", "anonymous"),
+                "stage": str(stage),
+                "elapsed_sec": float(time.perf_counter() - start_time),
+                "memory_mb": _cuda_memory_mb(),
+                "function_eval_requests_so_far": int(evals_so_far),
+                "rank_profile": rank_profile,
+                "rank_max": int(max(rank_profile, default=1)),
+                "rank_mean": float(sum(rank_profile) / len(rank_profile)) if rank_profile else 1.0,
+            })
+
         tt_model = cross_approximate(fcn=counted_fcn,max_batch=max_batch, domain=domain,
                         rmax=rmax, nswp=nswp, eps=eps, verbose=verbose, 
-                        kickrank=kickrank, device=self.device)
+                        kickrank=kickrank, device=self.device,
+                        diagnostics_callback=record_cross_event)
         if diag is not None:
             end_evals = int(diag.get("tt_cross_function_evals", 0))
+            final_rank_profile = _rank_profile(tt_model)
             diag.setdefault("cross_call_history", []).append({
                 "call_index": int(call_index),
                 "function_name": getattr(fcn, "__name__", "anonymous"),
@@ -768,22 +796,30 @@ class TTPI:
                 "nswp": int(nswp),
                 "eps": float(eps),
                 "kickrank": int(kickrank),
+                "elapsed_sec": float(time.perf_counter() - start_time),
+                "memory_mb_start": start_memory_mb,
+                "memory_mb_end": _cuda_memory_mb(),
                 "function_eval_requests": int(end_evals - start_evals),
                 "queried_points": int(end_evals - start_evals),
-                "rank_profile": _rank_profile(tt_model),
-                "rank_max": int(max(_rank_profile(tt_model), default=1)),
+                "rank_profile": final_rank_profile,
+                "rank_max": int(max(final_rank_profile, default=1)),
+                "rank_mean": float(sum(final_rank_profile) / len(final_rank_profile)) if final_rank_profile else 1.0,
             })
         return tt_model.to(self.device)
 
-    def _record_round_event(self, model_name, iteration, tt_model):
+    def _record_round_event(self, model_name, iteration, tt_model, stage="after_round"):
         diag = getattr(self, "diagnostics", None)
         if diag is None:
             return
+        rank_profile = _rank_profile(tt_model)
         diag.setdefault("round_events", []).append({
             "model": str(model_name),
             "iteration": int(iteration),
-            "rank_profile": _rank_profile(tt_model),
-            "rank_max": int(max(_rank_profile(tt_model), default=1)),
+            "stage": str(stage),
+            "memory_mb": _cuda_memory_mb(),
+            "rank_profile": rank_profile,
+            "rank_max": int(max(rank_profile, default=1)),
+            "rank_mean": float(sum(rank_profile) / len(rank_profile)) if rank_profile else 1.0,
         })
 
 
@@ -861,5 +897,3 @@ class TTPI:
         'reward_tt':self.reward_tt,
         'train_data':self.train_data
         },file_name+'.pt') # save the value model
-
-

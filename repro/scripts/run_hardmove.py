@@ -24,8 +24,11 @@ from dynamic_systems import HardMove
 from repro.pam_ordering import build_hardmove_orders
 from repro.diagnostics import (
     append_csv,
+    cross_process_rows,
     cross_query_rows,
     rank_profile_rows,
+    round_event_rows,
+    standard_run_log,
     summary_row,
     tensor_safe,
     write_csv,
@@ -502,7 +505,7 @@ def main():
 
     train_time_sec = time.time() - t0
     peak_memory_mb = (
-        torch.cuda.max_memory_allocated() / 1e6 if torch.cuda.is_available() else None
+        torch.cuda.max_memory_allocated() / 1e6 if torch.cuda.is_available() else 0.0
     )
 
     final_metrics = evaluate_policy(
@@ -569,6 +572,7 @@ def main():
     )
 
     result = {
+        "run_id": task_name,
         "task": f"HM({args.n_actuator})",
         "env_name": env_name,
         "env_variant": args.env_variant,
@@ -667,11 +671,29 @@ def main():
         ordering_name=args.action_order,
         diagnostics=ttpi.diagnostics,
     )
+    cross_process = cross_process_rows(
+        task_name=task_name,
+        seed=args.seed,
+        env_name=env_name,
+        ordering_name=args.action_order,
+        diagnostics=ttpi.diagnostics,
+    )
+    round_rows = round_event_rows(
+        task_name=task_name,
+        seed=args.seed,
+        env_name=env_name,
+        ordering_name=args.action_order,
+        diagnostics=ttpi.diagnostics,
+    )
     rank_csv = diagnostics_dir / "rank_profiles" / f"{task_name}.rank_profile.csv"
     cross_csv = diagnostics_dir / "cross_queries" / f"{task_name}.cross_queries.csv"
+    cross_process_csv = diagnostics_dir / "cross_process" / f"{task_name}.cross_process.csv"
+    round_csv = diagnostics_dir / "round_events" / f"{task_name}.round_events.csv"
     summary_csv = diagnostics_dir / "pam_ablation_summary.csv"
     write_csv(rank_csv, rank_rows)
     write_csv(cross_csv, cross_rows)
+    write_csv(cross_process_csv, cross_process)
+    write_csv(round_csv, round_rows)
     append_csv(
         summary_csv,
         summary_row(
@@ -681,10 +703,27 @@ def main():
             peak_memory_mb=peak_memory_mb,
         ),
     )
+    standard_log = standard_run_log(
+        run_id=task_name,
+        result=result,
+        train_data=ttpi.train_data,
+        diagnostics=ttpi.diagnostics,
+        peak_memory_mb=peak_memory_mb,
+        status="ok",
+    )
+    standard_file = diagnostics_dir / "run_json" / f"{task_name}.standard.json"
+    standard_file.parent.mkdir(parents=True, exist_ok=True)
+    standard_file.write_text(
+        json.dumps(tensor_safe(standard_log), indent=2, ensure_ascii=False),
+        encoding="utf-8",
+    )
 
     print(f"[DONE] saved result to {out_file}")
     print(f"[DONE] saved rank diagnostics to {rank_csv}")
     print(f"[DONE] saved TT-Cross diagnostics to {cross_csv}")
+    print(f"[DONE] saved TT-Cross process diagnostics to {cross_process_csv}")
+    print(f"[DONE] saved TT-Round diagnostics to {round_csv}")
+    print(f"[DONE] saved standard JSON log to {standard_file}")
     print(f"[DONE] appended summary to {summary_csv}")
     print(json.dumps(result["final_metrics"], indent=2, ensure_ascii=False))
 

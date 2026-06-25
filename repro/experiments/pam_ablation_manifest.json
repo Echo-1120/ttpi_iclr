@@ -48,7 +48,7 @@
   },
   "singular_spectra": {
     "enabled": true,
-    "k_states_hm8_hm12": 12,
+    "k_states_hm8_hm12": 8,
     "k_states_hm16": 8,
     "action_grid_cap": 12,
     "top_singular": 32,

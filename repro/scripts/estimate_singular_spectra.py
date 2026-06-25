@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import argparse
 import csv
-import itertools
 import json
 import math
 import sys
@@ -31,22 +30,38 @@ def parse_list(value: str) -> list[str]:
     return [x.strip() for x in value.split(",") if x.strip()]
 
 
-def representative_states(n_actuator: int, k: int, device: torch.device) -> list[tuple[str, torch.Tensor]]:
-    per_group = max(1, math.ceil(k / 3))
+def representative_states(k: int, device: torch.device, seed: int) -> list[tuple[str, torch.Tensor]]:
+    """Return half high-return proxy states and half Latin-hypercube states."""
+    g = torch.Generator(device="cpu")
+    g.manual_seed(seed + 7919)
+    n_proxy = max(1, k // 2)
+    n_lhs = max(0, k - n_proxy)
     states: list[tuple[str, torch.Tensor]] = []
-    easy_r = torch.linspace(0.0, 0.08, per_group + 1, dtype=torch.float64)[1:]
-    boundary_r = torch.linspace(0.25, 0.65, per_group, dtype=torch.float64)
-    hard_r = torch.linspace(0.75, 1.0, per_group, dtype=torch.float64)
-    groups = [("easy", easy_r), ("boundary", boundary_r), ("hard", hard_r)]
-    for group_idx, (name, radii) in enumerate(groups):
-        for i, radius in enumerate(radii):
-            theta = 2.0 * math.pi * (i + 0.25 * group_idx) / max(1, per_group)
-            state = torch.tensor(
-                [[float(radius * math.cos(theta)), float(radius * math.sin(theta)), 0.0, 0.0]],
-                dtype=torch.float64,
-                device=device,
-            )
-            states.append((name, state))
+
+    # High-return/success proxy: near-goal states with small velocities. If
+    # saved successful trajectories are unavailable, these are the closest
+    # deterministic proxy for successful trajectory states in HardMove.
+    radii = torch.linspace(0.0, 0.08, n_proxy + 1, dtype=torch.float64)[1:]
+    for i, radius in enumerate(radii):
+        theta = 2.0 * math.pi * i / max(1, n_proxy)
+        state = torch.tensor(
+            [[float(radius * math.cos(theta)), float(radius * math.sin(theta)), 0.0, 0.0]],
+            dtype=torch.float64,
+            device=device,
+        )
+        states.append(("high_return_proxy", state))
+
+    # Latin hypercube over [x, y, vx, vy], matching run_hardmove defaults.
+    mins = torch.tensor([-1.0, -1.0, 0.0, 0.0], dtype=torch.float64)
+    maxs = torch.tensor([1.0, 1.0, 0.25, 0.25], dtype=torch.float64)
+    for i in range(n_lhs):
+        coords = []
+        for dim in range(4):
+            perm = torch.randperm(max(1, n_lhs), generator=g)
+            u = (perm[i].to(torch.float64) + torch.rand((), generator=g, dtype=torch.float64)) / max(1, n_lhs)
+            coords.append(float(mins[dim] + u * (maxs[dim] - mins[dim])))
+        state = torch.tensor([coords], dtype=torch.float64, device=device)
+        states.append(("latin_hypercube", state))
     return states[:k]
 
 
@@ -148,6 +163,15 @@ def effective_rank(singular_values: list[float], rel_error: float) -> int:
     return len(vals)
 
 
+def effective_rank_relative_sigma1(singular_values: list[float], threshold: float) -> int:
+    if not singular_values:
+        return 0
+    sigma1 = abs(float(singular_values[0]))
+    if sigma1 <= 0:
+        return 0
+    return int(sum(1 for value in singular_values if abs(float(value)) / sigma1 >= threshold))
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--n-actuator", type=int, required=True)
@@ -157,9 +181,9 @@ def main() -> int:
     parser.add_argument("--n-action", type=int, default=50)
     parser.add_argument("--action-grid-cap", type=int, default=12)
     parser.add_argument("--orderings", type=str, default="local,block_pam,rankaware_proxy_pam,hybrid_pam")
-    parser.add_argument("--k-states", type=int, default=12)
+    parser.add_argument("--k-states", type=int, default=8)
     parser.add_argument("--top-singular", type=int, default=32)
-    parser.add_argument("--error-thresholds", type=str, default="0.1,0.05,0.01")
+    parser.add_argument("--error-thresholds", type=str, default="0.1,0.01,0.001")
     parser.add_argument("--max-unfold-elements", type=int, default=200000)
     parser.add_argument("--sampled-rows", type=int, default=512)
     parser.add_argument("--sampled-cols", type=int, default=512)
@@ -176,7 +200,7 @@ def main() -> int:
     coupling, orders = build_hardmove_orders(args.n_actuator, random_seed=args.seed)
     selected = parse_list(args.orderings)
     thresholds = [float(x) for x in parse_list(args.error_thresholds)]
-    states = representative_states(args.n_actuator, args.k_states, device)
+    states = representative_states(args.k_states, device, args.seed)
     dyn = HardMove(dt=0.01, w_goal=1e3, w_action=1e4, n=args.n_actuator, device=device)
 
     g_perm = torch.Generator(device="cpu")
@@ -227,6 +251,7 @@ def main() -> int:
                             "ordering": ordering,
                             "state_index": state_idx,
                             "state_type": state_type,
+                            "state_vector_json": json.dumps([float(x) for x in state.detach().cpu().view(-1).tolist()]),
                             "cut": cut,
                             "singular_index": sv_idx,
                             "singular_value": float(value),
@@ -242,14 +267,19 @@ def main() -> int:
                     "ordering": ordering,
                     "state_index": state_idx,
                     "state_type": state_type,
+                    "state_vector_json": json.dumps([float(x) for x in state.detach().cpu().view(-1).tolist()]),
                     "cut": cut,
                     "exact_unfolding": exact,
+                    "approximation": "exact" if exact else "sampled_row_col_svd",
                     "matrix_rows": int(n_rows),
                     "matrix_cols": int(n_cols),
                     "top_singular_value": float(singular_values[0]) if singular_values else 0.0,
                 }
                 for threshold in thresholds:
                     summary[f"effective_rank_relerr_{threshold:g}"] = effective_rank(singular_values, threshold)
+                    summary[f"effective_rank_sigma1_rel_{threshold:g}"] = effective_rank_relative_sigma1(
+                        singular_values, threshold
+                    )
                 summary_rows.append(summary)
 
     args.out_dir.mkdir(parents=True, exist_ok=True)
@@ -273,8 +303,11 @@ def main() -> int:
                 "env_variant": args.env_variant,
                 "orderings": selected,
                 "thresholds": thresholds,
+                "state_sampling": "half_high_return_proxy_half_latin_hypercube",
                 "detail_csv": str(detail_csv),
                 "summary_csv": str(summary_csv),
+                "singular_values": rows,
+                "effective_ranks": summary_rows,
             },
             indent=2,
         ),

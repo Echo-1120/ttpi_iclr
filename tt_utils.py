@@ -161,7 +161,7 @@ def get_value_discrete(tt_model, x, domain, device="cpu"):
 
 def cross_approximate(fcn,  max_batch, domain, 
                         rmax=200, nswp=20, eps=1e-4, verbose=False, 
-                        kickrank=3, device="cpu"):
+                        kickrank=3, device="cpu", diagnostics_callback=None):
     ''' 
         TT-Cross Approximation using tntorch's implementation
         eps: accuracy of approximation
@@ -171,7 +171,11 @@ def cross_approximate(fcn,  max_batch, domain,
         max_iter=nswp, eps=eps, rmax=rmax, kickrank=kickrank, 
         function_arg='matrix',device=device,_minimize=False,
         val_size=1e5, verbose=verbose)
+    if diagnostics_callback is not None:
+        diagnostics_callback("after_cross_before_round", tt_model)
     tt_model.round_tt(eps)
+    if diagnostics_callback is not None:
+        diagnostics_callback("after_round", tt_model)
     return tt_model.to(device)
 
 
