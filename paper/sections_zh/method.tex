@@ -1,0 +1,25 @@
+\section{方法}
+
+我们将物理感知模态重排序（physics-aware mode reordering, PAM）定义为 HardMove 动作模态上的一族置换。基线物理布局为
+\([\texttt{acc}_0,\texttt{sw}_0,\texttt{acc}_1,\texttt{sw}_1,\ldots]\)。本文重点研究更强的分块保留 PAM：每个混合执行器对 \(B_i=[\texttt{acc}_i,\texttt{sw}_i]\) 被视为一个原子 block；算法根据两两耦合分数构建加权 block graph，用谱初始化给出 block 顺序，并通过 2-opt 局部搜索进一步优化。可选的 block 内翻转只在执行器配对仍保持相邻时允许。
+
+对排序 \(\pi\)，令 \(\delta_\pi(k)\) 表示跨越 cut \(k\) 的边，并定义加权 cut 负担
+\begin{equation}
+C_k^W(\pi)=\sum_{(i,j)\in \delta_\pi(k)} W_{ij}.
+\end{equation}
+经典加权线性排列目标可写为
+\begin{equation}
+J_{\mathrm{LA}}(\pi)=\sum_{i<j} W_{ij}|\pi(i)-\pi(j)|
+= \sum_{k=1}^{m-1} C_k^W(\pi).
+\end{equation}
+因此，LA 是累计 cut 负担目标。我们同时报告 peak-cut 目标 \(\max_k C_k^W(\pi)\)，因为 OOM 行为通常由少数瓶颈 cut 触发，而不是由总 cut 面积单独决定。
+
+仓库中使用的秩感知替代目标为
+\begin{equation}
+\begin{aligned}
+J_{\mathrm{rank}}(\pi) =
+\lambda_{\mathrm{sum}}\sum_k \log(1 + r_k(\pi)) \\
+{}+\lambda_{\mathrm{peak}}\max_k \log(1 + r_k(\pi)),
+\end{aligned}
+\end{equation}
+其中 \(r_k(\pi)\) 可由缓存奇异谱估计，也可由 cut profile 派生的 segment-coupling proxy 估计。仓库在同一个 manifest-driven runner 下比较 local、random、bad-split、opposite-pair、greedy PAM、spectral PAM、block-preserving PAM、free PAM、sensitivity-weighted PAM、rank-aware PAM 和 hybrid 目标。

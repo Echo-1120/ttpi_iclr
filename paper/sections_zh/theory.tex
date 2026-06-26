@@ -1,0 +1,38 @@
+\section{机理分析}
+
+本文关注的机理是 cut-local 复杂度降低。如果某个置换将强耦合变量放在大多数 TT cut 的同一侧，那么 TT-Cross 可能需要更低的中间秩、更少的函数求值请求和更低的峰值显存。这里的论证并不是“物理相邻性直接提高回报”，而是“排序改变了 TTPI 在有限预算下必须近似的矩阵展开族”。
+
+\begin{proposition}
+令 \(\pi\) 为动作模态排序，\(\mathcal{M}_k^\pi(A_s)\) 表示条件动作张量 \(A_s\) 在 cut \(k\) 处的展开矩阵。cut \(k\) 处的精确张量链秩满足
+\[
+r_k^\star(\pi;s)=\mathrm{rank}(\mathcal{M}_k^\pi(A_s)).
+\]
+如果 \(A_s\) 可按两两交互分解，并且边 \((i,j)\) 的跨边交互秩为 \(\rho_{ij}\)，则
+\[
+r_k^\star(\pi;s)\le \prod_{(i,j)\in\delta_\pi(k)} \rho_{ij}.
+\]
+\end{proposition}
+
+第一个结论是标准 TT 秩恒等式：精确 TT 秩就是由排序诱导展开矩阵的矩阵秩。第二个结论是边界大小上界。将 cut \(k\) 左右两侧的所有因子分别收缩后，只有跨越该 cut 的交互需要作为接口保留，因此这些交互的传递维度给出了展开矩阵秩的上界。
+
+\begin{lemma}
+对加权 cut cost \(C_k^W(\pi)\)，加权线性排列目标满足
+\[
+J_{\mathrm{LA}}(\pi)=\sum_{k=1}^{m-1} C_k^W(\pi).
+\]
+\end{lemma}
+
+该恒等式精确说明了物理感知 LA 的作用。LA 不是任意启发式：它度量所有张量 cut 上的累计跨边质量。但它也不是直接的 peak-rank 目标。两个排序即使总 cut 面积一高一低，其峰值负担也可能接近甚至反向。因此，我们分别评估 LA、peak-cut 和 rank-aware 目标。
+
+\begin{lemma}
+令 \(A^V(s,a)\) 为价值函数 \(V\) 下的真实一步 advantage，\(\widehat A_\pi(s,a)\) 为排序相关的 TT 近似。如果
+\[
+\sup_{s,a}|A^V(s,a)-\widehat A_\pi(s,a)|\le \varepsilon_\pi
+\]
+且 \(\widehat \pi_\pi(s)\in\arg\max_a \widehat A_\pi(s,a)\)，则
+\[
+A^V(s,\widehat \pi_\pi(s))\ge \max_a A^V(s,a)-2\varepsilon_\pi .
+\]
+\end{lemma}
+
+因此，更好的排序只有通过近似质量或有限预算动作搜索误差才可能提升控制性能。仓库中的诊断工具按三层证据检验该机理：奇异谱有效秩作为机理 proxy，实际 TT 秩剖面作为训练产物，显存、运行时间和查询计数作为观测资源结果。

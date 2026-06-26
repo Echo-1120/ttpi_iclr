@@ -1,0 +1,34 @@
+\section{实验}
+
+本节所有数字都应由仓库产物通过 \path{repro/scripts/sync_paper_artifacts.py} 生成。
+
+\subsection{诊断性冒烟测试}
+
+当前上传的 HardMove pilot 应解释为诊断性冒烟测试，而不是最终学习证据。它用于检查日志系统能否暴露 ordering-dependent 的资源行为。在现有 HM8 seed-0 短运行中，bad-split 和 random 排序相比 local 排序提高了峰值显存，同时 reward-side TT-Cross 秩剖面在中部 cut 形成更大的高秩峰。与此同时，四个 pilot 排序的最终 value/advantage 秩摘要尚未拉开差异，且所有 pilot 运行的 success 均为 0。因此，当前证据支持资源敏感性主张，而不支持控制性能提升主张。
+
+\begin{table}[t]
+\centering
+\caption{HardMove TTPI 排序消融实验。显存和运行时间越低越好；成功率和 \(\mu\) 指标越高越好。}
+\input{tables/pam_ablation_main}
+\label{tab:pam-main-zh}
+\end{table}
+
+\input{tables/pam_diagnostics_summary}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.72\linewidth]{peak_memory_vs_ordering.png}
+  \caption{不同排序下的峰值显存。该图由仓库诊断结果生成，并应在每轮实验后重新生成。}
+  \label{fig:peak-memory-ordering-zh}
+\end{figure}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.72\linewidth]{tt_actual_rank_profile_by_ordering.png}
+  \caption{不同排序下的实际 TT 秩剖面。}
+  \label{fig:actual-rank-profile-zh}
+\end{figure}
+
+\subsection{主实验所需证据}
+
+主实验套件围绕四条消融轴组织：目标函数选择（LA、peak-cut、rank-aware proxy、spectral cache）、信息源（physics-only、sensitivity-only、hybrid）、结构约束（block-preserving、free permutation、wrong split）和 proxy 精度（spectral cache、segment-coupling proxy、no rank proxy）。压力测试包括原始 HardMove、index-permuted HardMove 和 cross-coupled HardMove。预期主张不是某一个排序在所有指标上都占优，而是奇异谱 proxy、实际 TT 秩剖面和资源指标共同解释何时分块保留秩感知排序能在固定预算下降低 TTPI 负担。

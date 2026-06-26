@@ -8,10 +8,18 @@ numbers. Regenerate paper tables and the experiment log after each run:
 python repro/scripts/sync_paper_artifacts.py
 ```
 
-Compile from this directory:
+English manuscript entry:
+`paper/main.tex`.
+
+Chinese synchronized manuscript entry:
+`paper/main_zh.tex`.
+
+Compile from the repository root:
 
 ```bash
-make -C paper
+make -C paper en
+make -C paper zh
+make -C paper all
 ```
 
 If LaTeX packages are missing on the local machine, compile on the server or
