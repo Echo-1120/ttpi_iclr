@@ -21,7 +21,7 @@ sys.path.insert(0, str(ROOT))
 
 from ttpi import TTPI
 from dynamic_systems import HardMove
-from repro.pam_ordering import build_hardmove_orders
+from repro.pam_ordering import ORDERING_NAMES, build_hardmove_orders
 from repro.diagnostics import (
     append_csv,
     cross_process_rows,
@@ -246,22 +246,7 @@ def main():
                         help="Use symmetric velocity domain [-vmax, vmax] instead of [0, vmax]")
     parser.add_argument(
         "--action-order",
-        choices=[
-            "local",
-            "badsplit",
-            "random",
-            "opposite_pair",
-            "pam_spectral",
-            "pam_greedy",
-            "pam_spectral_refined",
-            "pam_greedy_refined",
-            "block_pam",
-            "free_pam",
-            "sensitivity_pam",
-            "rankaware_proxy_pam",
-            "rankaware_spectral_pam",
-            "hybrid_pam",
-        ],
+        choices=ORDERING_NAMES,
         default="local",
         help="TT action-mode order. 'local' preserves the original TTPI HardMove layout.",
     )

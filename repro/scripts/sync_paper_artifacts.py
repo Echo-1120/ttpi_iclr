@@ -120,6 +120,36 @@ def write_summary_table(rows: list[dict[str, str]]) -> None:
     out.write_text("\n".join(lines), encoding="utf-8")
 
 
+def write_main_ablation_table(rows: list[dict[str, str]]) -> None:
+    out = PAPER / "tables" / "pam_ablation_main.tex"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    if not rows:
+        out.write_text(
+            "\\begin{tabular}{ll}\n\\toprule\nStatus & Missing CSV \\\\\n\\bottomrule\n\\end{tabular}\n",
+            encoding="utf-8",
+        )
+        return
+    rows = sorted(rows, key=lambda r: (r.get("env", ""), f(r.get("peak_memory_mb"))))
+    lines = [
+        "\\begin{tabular}{lrrrrrr}",
+        "\\toprule",
+        "Ordering & Mem. MB & Time s & Success & $\\mu$ & Adv. rank & Evals \\\\",
+        "\\midrule",
+    ]
+    for row in rows:
+        lines.append(
+            f"{tex_escape(row.get('ordering', ''))} & "
+            f"{fmt(row.get('peak_memory_mb'), 1)} & "
+            f"{fmt(row.get('runtime_sec'), 2)} & "
+            f"{fmt(row.get('success_rate'), 2)} & "
+            f"{fmt(row.get('mu'), 2)} & "
+            f"{fmt(row.get('adv_rank_max'), 1)} & "
+            f"{fmt(row.get('tt_cross_function_evals'), 0)} \\\\"
+        )
+    lines += ["\\bottomrule", "\\end{tabular}", ""]
+    out.write_text("\n".join(lines), encoding="utf-8")
+
+
 def write_final_table(rows: list[dict[str, str]]) -> None:
     out = PAPER / "tables" / "pam_final_table.tex"
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -247,9 +277,11 @@ def write_experiment_log(summary_rows: list[dict[str, str]], final_rows: list[di
 def main() -> int:
     summary_rows = read_csv(DIAG / "pam_ablation_summary.csv")
     final_rows = read_csv(DIAG / "pam_ablation_final_table.csv")
+    write_main_ablation_table(summary_rows)
     write_summary_table(summary_rows)
     write_final_table(final_rows)
     write_experiment_log(summary_rows, final_rows)
+    print("[DONE] wrote paper/tables/pam_ablation_main.tex")
     print("[DONE] wrote paper/tables/pam_diagnostics_summary.tex")
     print("[DONE] wrote paper/tables/pam_final_table.tex")
     print("[DONE] wrote notes/experiment_log.md")

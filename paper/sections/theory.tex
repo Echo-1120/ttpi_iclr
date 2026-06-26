@@ -6,3 +6,18 @@ require lower intermediate ranks and fewer function-evaluation requests. This is
 currently a hypothesis to be validated by three aligned measurements:
 singular-spectrum effective rank, actual TT rank profiles, and measured
 memory/runtime/query counts.
+
+\begin{proposition}
+Let \(\pi\) be an action-mode ordering, and let
+\(\mathcal{M}_k^\pi(A_s)\) denote the unfolding matrix of the conditional
+action tensor \(A_s\) at cut \(k\). The exact tensor-chain rank at cut \(k\)
+satisfies
+\[
+r_k^\star(\pi;s)=\mathrm{rank}(\mathcal{M}_k^\pi(A_s)).
+\]
+If \(A_s\) factorizes according to pairwise interactions and the cross-edge
+interaction rank of edge \((i,j)\) is \(\rho_{ij}\), then
+\[
+r_k^\star(\pi;s)\le \prod_{(i,j)\in\delta_\pi(k)} \rho_{ij}.
+\]
+\end{proposition}

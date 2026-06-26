@@ -33,6 +33,23 @@ def validate_order(order: Iterable[int], n_modes: int) -> list[int]:
 
 Matrix = list[list[float]]
 
+ORDERING_NAMES = (
+    "local",
+    "badsplit",
+    "random",
+    "opposite_pair",
+    "pam_spectral",
+    "pam_greedy",
+    "pam_spectral_refined",
+    "pam_greedy_refined",
+    "block_pam",
+    "free_pam",
+    "sensitivity_pam",
+    "rankaware_proxy_pam",
+    "rankaware_spectral_pam",
+    "hybrid_pam",
+)
+
 
 def weighted_linear_arrangement(order: Iterable[int], coupling: Matrix) -> float:
     """Return weighted minimum-linear-arrangement cost for an ordering."""
@@ -53,11 +70,15 @@ def adjacency_score(order: Iterable[int], coupling: Matrix) -> float:
     return float(sum(float(coupling[order[i]][order[i + 1]]) for i in range(len(order) - 1)))
 
 
-def peak_cut_cost(order: Iterable[int], coupling: Matrix) -> float:
-    """Maximum weighted edge mass crossing any TT cut."""
+def segmented_cut_costs(order: Iterable[int], coupling: Matrix) -> list[float]:
+    """Weighted crossing mass for each TT cut.
+
+    The sum of these cut costs equals the weighted linear arrangement objective,
+    because an edge with endpoint distance d crosses exactly d cuts.
+    """
     order = validate_order(order, len(coupling))
     pos = {mode: idx for idx, mode in enumerate(order)}
-    peak = 0.0
+    costs: list[float] = []
     for cut in range(1, len(order)):
         left = {mode for mode, idx in pos.items() if idx < cut}
         cost = 0.0
@@ -65,8 +86,18 @@ def peak_cut_cost(order: Iterable[int], coupling: Matrix) -> float:
             for j in range(len(order)):
                 if j not in left:
                     cost += float(coupling[i][j])
-        peak = max(peak, cost)
-    return float(peak)
+        costs.append(float(cost))
+    return costs
+
+
+def weighted_segmented_cut_sum(order: Iterable[int], coupling: Matrix) -> float:
+    """Return sum_k cut_cost_k, identical to weighted linear arrangement."""
+    return float(sum(segmented_cut_costs(order, coupling)))
+
+
+def peak_cut_cost(order: Iterable[int], coupling: Matrix) -> float:
+    """Maximum weighted edge mass crossing any TT cut."""
+    return float(max(segmented_cut_costs(order, coupling), default=0.0))
 
 
 def rankaware_proxy_cost(
@@ -78,19 +109,14 @@ def rankaware_proxy_cost(
     """Rank-aware surrogate from cut masses."""
     import math
 
-    order = validate_order(order, len(coupling))
-    pos = {mode: idx for idx, mode in enumerate(order)}
-    cut_loads = []
-    for cut in range(1, len(order)):
-        left = {mode for mode, idx in pos.items() if idx < cut}
-        cost = 0.0
-        for i in left:
-            for j in range(len(order)):
-                if j not in left:
-                    cost += float(coupling[i][j])
-        cut_loads.append(cost)
+    cut_loads = segmented_cut_costs(order, coupling)
     logs = [math.log1p(max(0.0, x)) for x in cut_loads]
     return float(lambda_sum * sum(logs) + lambda_peak * max(logs, default=0.0))
+
+
+def available_orderings() -> tuple[str, ...]:
+    """Return the unified public ordering registry."""
+    return ORDERING_NAMES
 
 
 def hardmove_action_coupling(
