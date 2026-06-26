@@ -1,5 +1,7 @@
 # Claims Ledger
 
+Chinese synchronized version: `notes/claims_zh.md`.
+
 ## Paper Framing
 
 Working title:
