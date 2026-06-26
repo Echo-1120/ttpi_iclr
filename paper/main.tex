@@ -1,18 +1,26 @@
-\documentclass[11pt]{article}
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
 
-\usepackage[margin=1in]{geometry}
-\usepackage{amsmath,amssymb}
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
 \usepackage{amsthm}
 \usepackage{booktabs}
 \usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
 \usepackage{hyperref}
-\usepackage[numbers,sort&compress]{natbib}
 
 \graphicspath{{figures/}{../repro/figures/pam_diagnostics/}{../repro/figures/hardmove/}}
 
-\title{Physics-Aware Mode Reordering for Tensor-Train Policy Iteration}
-\author{Anonymous Authors}
-\date{}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+\title{Rank-Aware Mode Reordering for Tensor-Train Policy Iteration}
+
+\author{\IEEEauthorblockN{Anonymous Authors}
+\IEEEauthorblockA{\textit{Anonymous Institution}\\
+Anonymous City, Anonymous Country\\
+anonymous@example.com}}
 
 \newtheorem{proposition}{Proposition}
 
@@ -25,6 +33,10 @@ tables, and figures should be regenerated from the experiment artifacts before
 submission.
 \end{abstract}
 
+\begin{IEEEkeywords}
+tensor train, policy iteration, mode ordering, hybrid control, low-rank approximation
+\end{IEEEkeywords}
+
 \input{sections/introduction}
 \input{sections/related_work}
 \input{sections/preliminaries}
@@ -33,7 +45,7 @@ submission.
 \input{sections/experiments}
 \input{sections/conclusion}
 
-\bibliographystyle{plainnat}
+\bibliographystyle{IEEEtran}
 \bibliography{references}
 
 \end{document}

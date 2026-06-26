@@ -8,9 +8,11 @@ a spectral order, and applies local search while preserving actuator adjacency.
 
 The rank-aware surrogate used in the repository is
 \begin{equation}
+\begin{aligned}
 J_{\mathrm{rank}}(\pi) =
-\lambda_{\mathrm{sum}}\sum_k \log(1 + r_k(\pi)) +
-\lambda_{\mathrm{peak}}\max_k \log(1 + r_k(\pi)),
+\lambda_{\mathrm{sum}}\sum_k \log(1 + r_k(\pi)) \\
+{}+\lambda_{\mathrm{peak}}\max_k \log(1 + r_k(\pi)),
+\end{aligned}
 \end{equation}
 where \(r_k\) is estimated either from cached singular spectra or from a
 segment-coupling proxy.

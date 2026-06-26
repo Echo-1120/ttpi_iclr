@@ -100,9 +100,11 @@ def write_summary_table(rows: list[dict[str, str]]) -> None:
         "\\centering",
         "\\caption{Repository-synchronized PAM diagnostics. Smoke results validate diagnostics but do not support performance claims.}",
         "\\label{tab:pam-diagnostics-summary}",
-        "\\begin{tabular}{lrrrrrrr}",
+        "\\scriptsize",
+        "\\setlength{\\tabcolsep}{2.4pt}",
+        "\\begin{tabular}{@{}lrrrrrrr@{}}",
         "\\toprule",
-        "Ordering & LA & Peak-cut & Mem. MB & Time s & Evals & Success & $\\mu$ \\\\",
+        "Ord. & LA & Cut & MB & s & Evals & Succ. & $\\mu$ \\\\",
         "\\midrule",
     ]
     for row in rows:
@@ -116,7 +118,7 @@ def write_summary_table(rows: list[dict[str, str]]) -> None:
             f"{fmt(row.get('success_rate'), 2)} & "
             f"{fmt(row.get('mu'), 2)} \\\\"
         )
-    lines += ["\\bottomrule", "\\end{tabular}", "\\end{table}", ""]
+    lines += ["\\bottomrule", "\\end{tabular}", "\\normalsize", "\\end{table}", ""]
     out.write_text("\n".join(lines), encoding="utf-8")
 
 
@@ -131,9 +133,11 @@ def write_main_ablation_table(rows: list[dict[str, str]]) -> None:
         return
     rows = sorted(rows, key=lambda r: (r.get("env", ""), f(r.get("peak_memory_mb"))))
     lines = [
-        "\\begin{tabular}{lrrrrrr}",
+        "\\scriptsize",
+        "\\setlength{\\tabcolsep}{2.4pt}",
+        "\\begin{tabular}{@{}lrrrrrr@{}}",
         "\\toprule",
-        "Ordering & Mem. MB & Time s & Success & $\\mu$ & Adv. rank & Evals \\\\",
+        "Ord. & MB & s & Succ. & $\\mu$ & A-rank & Evals \\\\",
         "\\midrule",
     ]
     for row in rows:
@@ -146,7 +150,7 @@ def write_main_ablation_table(rows: list[dict[str, str]]) -> None:
             f"{fmt(row.get('adv_rank_max'), 1)} & "
             f"{fmt(row.get('tt_cross_function_evals'), 0)} \\\\"
         )
-    lines += ["\\bottomrule", "\\end{tabular}", ""]
+    lines += ["\\bottomrule", "\\end{tabular}", "\\normalsize", ""]
     out.write_text("\n".join(lines), encoding="utf-8")
 
 
