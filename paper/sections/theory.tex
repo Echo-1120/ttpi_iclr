@@ -1,11 +1,11 @@
 \section{Mechanistic Analysis}
 
-The intended mechanism is cut-local complexity reduction: if a permutation
+The intended mechanism is cut-local complexity reduction. If a permutation
 places strongly coupled variables on the same side of most TT cuts, TT-Cross may
-require lower intermediate ranks and fewer function-evaluation requests. This is
-currently a hypothesis to be validated by three aligned measurements:
-singular-spectrum effective rank, actual TT rank profiles, and measured
-memory/runtime/query counts.
+require lower intermediate ranks, fewer function-evaluation requests, and lower
+peak memory. The argument is not that physical adjacency directly improves
+return; it is that ordering changes the family of matricizations that TTPI must
+approximate under a finite budget.
 
 \begin{proposition}
 Let \(\pi\) be an action-mode ordering, and let
@@ -21,3 +21,41 @@ interaction rank of edge \((i,j)\) is \(\rho_{ij}\), then
 r_k^\star(\pi;s)\le \prod_{(i,j)\in\delta_\pi(k)} \rho_{ij}.
 \]
 \end{proposition}
+
+The first statement is the standard TT rank identity: exact TT ranks are the
+matrix ranks of the order-induced unfoldings. The second statement is a
+boundary-size upper bound. After contracting all factors strictly to the left
+and right of cut \(k\), only interactions crossing the cut need to remain as an
+interface, so their transfer dimensions upper-bound the matricization rank.
+
+\begin{lemma}
+For weighted cut costs \(C_k^W(\pi)\), the weighted linear-arrangement objective
+satisfies
+\[
+J_{\mathrm{LA}}(\pi)=\sum_{k=1}^{m-1} C_k^W(\pi).
+\]
+\end{lemma}
+
+This identity makes the role of physics-aware LA precise. LA is not arbitrary:
+it measures cumulative crossing mass across all tensor cuts. It is also not a
+direct peak-rank objective. Two orderings may have similar or reversed peak
+burden even when one has lower total cut area. This is why we evaluate LA,
+peak-cut, and rank-aware objectives separately.
+
+\begin{lemma}
+Let \(A^V(s,a)\) be the true one-step advantage under value function \(V\), and
+let \(\widehat A_\pi(s,a)\) be the ordering-dependent TT approximation. If
+\[
+\sup_{s,a}|A^V(s,a)-\widehat A_\pi(s,a)|\le \varepsilon_\pi
+\]
+and \(\widehat \pi_\pi(s)\in\arg\max_a \widehat A_\pi(s,a)\), then
+\[
+A^V(s,\widehat \pi_\pi(s))\ge \max_a A^V(s,a)-2\varepsilon_\pi .
+\]
+\end{lemma}
+
+Thus a stronger ordering can improve control only through approximation quality
+or finite-budget action search. The diagnostics in this repository are designed
+to test the mechanism in three layers: singular-spectrum effective rank as a
+mechanistic proxy, actual TT rank profiles as the training artifact, and
+memory/runtime/query counts as the observed resource outcome.

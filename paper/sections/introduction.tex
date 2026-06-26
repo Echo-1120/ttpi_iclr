@@ -2,10 +2,27 @@
 
 Tensor-train policy iteration (TTPI) uses low-rank tensor approximations to make
 hybrid control tractable in discretized state-action spaces
-\cite{shetty2024generalized,oseledets2011tensor}. This draft studies whether
-the ordering of hybrid action modes changes the computational burden of TTPI.
+\cite{shetty2024generalized,oseledets2011tensor}. Its favorable scaling depends
+on the ranks of the tensor-train representation, and those ranks are not an
+intrinsic property of the unordered variables. They are the ranks of sequential
+unfoldings induced by a chosen mode order. This makes action-mode ordering a
+first-class algorithmic variable for TTPI rather than a cosmetic implementation
+detail.
 
-The central working hypothesis is that physically coupled action variables
-should be placed close in the tensor train. The current evidence is intentionally
-tracked conservatively in \path{notes/claims.md}; unsupported claims must not be
-promoted into the paper body.
+The initial physical intuition is simple: action variables that interact through
+the dynamics, reward, or value backup should not be separated across many tensor
+cuts. However, a physics-only ordering objective is not by itself a TT-rank
+objective. Weighted linear arrangement captures the total area under a weighted
+cut profile, while peak memory and TT-Cross workload are often governed by the
+worst cut. This mismatch motivates a rank-aware extension that keeps hybrid
+actuator blocks contiguous and optimizes cut-level bottlenecks rather than only
+physical adjacency.
+
+The paper is therefore framed around rank-aware, block-preserving mode
+reordering for TTPI. Physics-aware coupling is used as a prior; sensitivity
+weights, singular-spectrum estimates, and actual TT rank diagnostics are used to
+test whether the prior is aligned with TT complexity. The current
+repository-synchronized evidence is tracked conservatively in
+\path{notes/claims.md}: pilot HardMove runs support resource-sensitivity
+claims, but do not yet support a claim that ordering improves final control
+performance.

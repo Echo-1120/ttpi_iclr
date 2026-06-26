@@ -5,6 +5,16 @@ All numbers in this section should be generated from repository artifacts using
 
 \subsection{Diagnostic Smoke Test}
 
+The current uploaded HardMove pilot should be interpreted as a diagnostic smoke
+test rather than as final learning evidence. It checks whether the logging stack
+can expose ordering-dependent resource behavior. In the available HM8 seed-0
+short runs, bad-split and random orderings increase peak memory relative to the
+local ordering, while the reward-side TT-Cross rank profile develops a larger
+middle-cut hump. At the same time, final value/advantage rank summaries are not
+yet separated across the four pilot orderings, and all pilot runs report zero
+success. Therefore the current evidence supports a resource-sensitivity claim,
+not a control-performance claim.
+
 \begin{table}[t]
 \centering
 \caption{HardMove TTPI ordering ablation. Memory and runtime are lower-is-better;
@@ -29,3 +39,16 @@ success rate and \(\mu\) are higher-is-better.}
   \caption{Actual TT rank profile by ordering.}
   \label{fig:actual-rank-profile}
 \end{figure}
+
+\subsection{Required Main Evidence}
+
+The main experiment suite is organized around four ablation axes: objective
+choice (LA, peak-cut, rank-aware proxy, spectral cache), information source
+(physics-only, sensitivity-only, hybrid), structural constraint
+(block-preserving, free permutation, wrong split), and proxy precision
+(spectral cache, segment-coupling proxy, no rank proxy). The stress tests include
+original HardMove, index-permuted HardMove, and cross-coupled HardMove. The
+expected claim is not that one ordering dominates every metric, but that the
+singular-spectrum proxy, actual TT rank profile, and resource metrics explain
+when block-preserving rank-aware orderings reduce TTPI burden under fixed
+budgets.

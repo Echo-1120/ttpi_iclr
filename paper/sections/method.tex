@@ -2,9 +2,26 @@
 
 We define physics-aware mode reordering (PAM) as a family of permutations over
 HardMove action modes. The baseline physical layout is
-\([acc_0, sw_0, acc_1, sw_1,\ldots]\). Block-preserving PAM treats
-\([acc_i, sw_i]\) as an actuator block, builds a block coupling graph, initializes
-a spectral order, and applies local search while preserving actuator adjacency.
+\([\texttt{acc}_0,\texttt{sw}_0,\texttt{acc}_1,\texttt{sw}_1,\ldots]\). The
+stronger method studied in this paper is block-preserving PAM: each hybrid
+actuator pair \(B_i=[\texttt{acc}_i,\texttt{sw}_i]\) is treated as an atomic
+block, a weighted block graph is built from pairwise coupling scores, and a
+spectral initialization is refined by 2-opt local search. Optional within-block
+flips are allowed only when the pair remains adjacent.
+
+For an ordering \(\pi\), let \(\delta_\pi(k)\) denote the edges crossing cut
+\(k\) and define the weighted cut burden
+\begin{equation}
+C_k^W(\pi)=\sum_{(i,j)\in \delta_\pi(k)} W_{ij}.
+\end{equation}
+The classical weighted linear-arrangement objective can then be written as
+\begin{equation}
+J_{\mathrm{LA}}(\pi)=\sum_{i<j} W_{ij}|\pi(i)-\pi(j)|
+= \sum_{k=1}^{m-1} C_k^W(\pi).
+\end{equation}
+Thus LA is an integrated cut-burden objective. We also report a peak-cut
+objective \(\max_k C_k^W(\pi)\), because out-of-memory behavior is often caused
+by a small number of bottleneck cuts rather than by the total cut area.
 
 The rank-aware surrogate used in the repository is
 \begin{equation}
@@ -14,5 +31,8 @@ J_{\mathrm{rank}}(\pi) =
 {}+\lambda_{\mathrm{peak}}\max_k \log(1 + r_k(\pi)),
 \end{aligned}
 \end{equation}
-where \(r_k\) is estimated either from cached singular spectra or from a
-segment-coupling proxy.
+where \(r_k(\pi)\) is estimated either from cached singular spectra or from a
+segment-coupling proxy derived from the cut profile. The repository compares
+local, random, bad-split, opposite-pair, greedy PAM, spectral PAM,
+block-preserving PAM, free PAM, sensitivity-weighted PAM, rank-aware PAM, and
+hybrid objectives under one manifest-driven runner.

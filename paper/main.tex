@@ -15,7 +15,7 @@
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 
-\title{Rank-Aware Mode Reordering for Tensor-Train Policy Iteration}
+\title{Rank-Aware, Block-Preserving Mode Reordering for Tensor-Train Policy Iteration}
 
 \author{\IEEEauthorblockN{Anonymous Authors}
 \IEEEauthorblockA{\textit{Anonymous Institution}\\
@@ -23,14 +23,25 @@ Anonymous City, Anonymous Country\\
 anonymous@example.com}}
 
 \newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-This draft is a repository-synchronized working manuscript. Claims, numbers,
-tables, and figures should be regenerated from the experiment artifacts before
-submission.
+Tensor-train policy iteration (TTPI) makes hybrid control tractable by replacing
+full state-action tensors with low-rank tensor trains, but its cost remains
+sensitive to the ranks induced by sequential tensor unfoldings. This paper
+studies action-mode ordering as an explicit algorithmic variable in TTPI. We
+argue that physics-aware adjacency is a useful prior but not a sufficient
+objective: weighted linear arrangement measures cumulative cut burden, whereas
+peak memory and TT-Cross workload are driven by cut-level rank bottlenecks. We
+therefore formulate block-preserving and rank-aware mode reordering objectives
+for hybrid actuator pairs, together with diagnostics that record TT-Cross query
+requests, transient rank profiles, memory, runtime, and singular-spectrum
+proxies. The current repository-synchronized results support a resource
+sensitivity claim and define the evidence required before making stronger
+control-performance claims.
 \end{abstract}
 
 \begin{IEEEkeywords}
