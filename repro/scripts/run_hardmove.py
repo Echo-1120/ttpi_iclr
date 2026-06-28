@@ -5,6 +5,7 @@ import sys
 import json
 import time
 import argparse
+import warnings
 from pathlib import Path
 
 import torch
@@ -217,6 +218,10 @@ def main():
     parser.add_argument("--n-state", type=int, default=50)
     parser.add_argument("--n-action", type=int, default=100)
     parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--training-seed", type=int, default=None)
+    parser.add_argument("--environment-seed", type=int, default=None)
+    parser.add_argument("--permutation-seed", type=int, default=None)
+    parser.add_argument("--state-sampling-seed", type=int, default=None)
     parser.add_argument("--n-iter", type=int, default=100)
     parser.add_argument("--n-iter-v", type=int, default=1)
     parser.add_argument("--callback-freq", type=int, default=10)
@@ -265,12 +270,27 @@ def main():
 
 
     args = parser.parse_args()
+    training_seed = args.training_seed if args.training_seed is not None else args.seed
+    environment_seed = args.environment_seed if args.environment_seed is not None else args.env_permutation_seed
+    permutation_seed = args.permutation_seed if args.permutation_seed is not None else args.order_random_seed
+    state_sampling_seed = args.state_sampling_seed if args.state_sampling_seed is not None else training_seed
+    args.seed = training_seed
+    args.env_permutation_seed = environment_seed
+    args.order_random_seed = permutation_seed
+
+    if args.action_order == "opposite_pair":
+        warnings.warn(
+            "'opposite_pair' is a legacy alias for opposite_interleave_legacy; "
+            "use reverse_blocks or flip_within_block for the formal diagnostic controls.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
 
     if args.device == "cuda" and not torch.cuda.is_available():
         raise RuntimeError("CUDA is not available, but --device cuda was requested.")
 
     device = torch.device(args.device)
-    seed_everything(args.seed)
+    seed_everything(training_seed)
 
     out_dir = ROOT / "repro" / "results"
     model_dir = ROOT / "repro" / "models"
@@ -318,9 +338,10 @@ def main():
     ]
 
     domain_action_phys = [domain_acc0, domain_switch0] * args.n_actuator
+    ordering_t0 = time.time()
     coupling, order_results = build_hardmove_orders(
         n_actuator=args.n_actuator,
-        random_seed=args.order_random_seed,
+        random_seed=permutation_seed,
         pair_weight=args.pam_pair_weight,
         neighbor_weight=args.pam_neighbor_weight,
         opposite_weight=args.pam_opposite_weight,
@@ -333,6 +354,7 @@ def main():
         dtype=torch.long,
     )
     domain_action = [domain_action_phys[i] for i in action_order]
+    ordering_search_time_sec = time.time() - ordering_t0
 
     dyn_system = HardMove(
         dt=args.dt,
@@ -378,7 +400,7 @@ def main():
         state_min=state_min,
         state_max=state_max,
         device=device,
-        seed=args.seed,
+        seed=state_sampling_seed,
     )
 
     eval_history = []
@@ -470,9 +492,13 @@ def main():
     if torch.cuda.is_available():
         torch.cuda.reset_peak_memory_stats()
 
-    t0 = time.time()
-
+    training_t0 = time.time()
     stopped_early = False
+    status = "ok"
+    oom = False
+    error_type = ""
+    error_message = ""
+    caught_exception = None
 
     try:
         ttpi.train(
@@ -487,27 +513,45 @@ def main():
     except EarlyStopTraining:
         stopped_early = True
         print("[INFO] training stopped early by evaluation criterion")
+    except torch.OutOfMemoryError as exc:
+        status = "oom"
+        oom = True
+        error_type = type(exc).__name__
+        error_message = str(exc)
+        print(f"[OOM] {error_message}", flush=True)
+    except Exception as exc:
+        status = "error"
+        error_type = type(exc).__name__
+        error_message = str(exc)
+        caught_exception = exc
+        print(f"[ERROR] {error_type}: {error_message}", flush=True)
 
-    train_time_sec = time.time() - t0
+    ttpi_training_time_sec = time.time() - training_t0
+    train_time_sec = ttpi_training_time_sec
+    total_time_sec = ordering_search_time_sec + ttpi_training_time_sec
     peak_memory_mb = (
         torch.cuda.max_memory_allocated() / 1e6 if torch.cuda.is_available() else 0.0
     )
 
-    final_metrics = evaluate_policy(
-        ttpi=ttpi,
-        dyn_system=dyn_system,
-        init_state=init_state,
-        dt=args.dt,
-        horizon_sec=10.0,
-        target_radius=args.target_radius,
-        action_inverse=action_inverse,
-        action_transform=transform_physical_action,
-    )
-    best_metrics = select_best_eval(eval_history)
+    if status == "ok":
+        final_metrics = evaluate_policy(
+            ttpi=ttpi,
+            dyn_system=dyn_system,
+            init_state=init_state,
+            dt=args.dt,
+            horizon_sec=10.0,
+            target_radius=args.target_radius,
+            action_inverse=action_inverse,
+            action_transform=transform_physical_action,
+        )
+        best_metrics = select_best_eval(eval_history)
+    else:
+        final_metrics = {}
+        best_metrics = None
 
     # Paper-aligned metrics: four reporting conventions from eval_history
     paper_metrics = {}
-    if eval_history:
+    if status == "ok" and eval_history:
         # 1. Best S (ignore mu)
         best_S_entry = max(eval_history, key=lambda m: m.get("success_rate", 0))
         paper_metrics["best_S"] = {
@@ -544,17 +588,19 @@ def main():
     fig_dir = ROOT / "repro" / "figures" / "hardmove"
     fig_path = fig_dir / f"{task_name}_traj.png"
 
-    traj_fig = save_trajectory_figure(
-        ttpi=ttpi,
-        dyn_system=dyn_system,
-        init_state=init_state,
-        dt=args.dt,
-        fig_path=fig_path,
-        horizon_sec=10.0,
-        max_traj=min(args.n_test, 20),
-        action_inverse=action_inverse,
-        action_transform=transform_physical_action,
-    )
+    traj_fig = None
+    if status == "ok":
+        traj_fig = save_trajectory_figure(
+            ttpi=ttpi,
+            dyn_system=dyn_system,
+            init_state=init_state,
+            dt=args.dt,
+            fig_path=fig_path,
+            horizon_sec=10.0,
+            max_traj=min(args.n_test, 20),
+            action_inverse=action_inverse,
+            action_transform=transform_physical_action,
+        )
 
     result = {
         "run_id": task_name,
@@ -564,6 +610,10 @@ def main():
         "env_permutation": env_permutation,
         "cross_coupling_strength": args.cross_coupling_strength,
         "seed": args.seed,
+        "training_seed": training_seed,
+        "environment_seed": environment_seed,
+        "permutation_seed": permutation_seed,
+        "state_sampling_seed": state_sampling_seed,
         "n_state": args.n_state,
         "n_action": args.n_action,
         "n_actuator": args.n_actuator,
@@ -591,6 +641,10 @@ def main():
         "eps_round_a": args.eps_round_a,
         "n_samples": args.n_samples,
         "action_order_name": args.action_order,
+        "canonical_ordering": order_info.metadata.get("canonical_name", args.action_order),
+        "display_ordering": order_info.metadata.get("display_name", args.action_order),
+        "baseline_category": order_info.metadata.get("baseline_category"),
+        "deprecated_ordering_alias": order_info.metadata.get("deprecated_alias", False),
         "action_order": action_order,
         "action_inverse": [int(x) for x in action_inverse.detach().cpu().tolist()],
         "pam_order_objective": order_info.objective,
@@ -598,6 +652,7 @@ def main():
         "pam_order_peak_cut_objective": order_info.metadata.get("peak_cut_objective"),
         "pam_order_rankaware_proxy_objective": order_info.metadata.get("rankaware_proxy_objective"),
         "pam_order_block_preserving": order_info.metadata.get("block_preserving"),
+        "pam_order_metadata": order_info.metadata,
         "pam_order_weights": {
             "pair_weight": args.pam_pair_weight,
             "neighbor_weight": args.pam_neighbor_weight,
@@ -611,10 +666,17 @@ def main():
                 "peak_cut_objective": result.metadata.get("peak_cut_objective"),
                 "rankaware_proxy_objective": result.metadata.get("rankaware_proxy_objective"),
                 "block_preserving": result.metadata.get("block_preserving"),
+                "canonical_name": result.metadata.get("canonical_name"),
+                "display_name": result.metadata.get("display_name"),
+                "baseline_category": result.metadata.get("baseline_category"),
+                "deprecated_alias": result.metadata.get("deprecated_alias"),
             }
             for name, result in order_results.items()
         },
         "train_time_sec": train_time_sec,
+        "ordering_search_time_sec": ordering_search_time_sec,
+        "ttpi_training_time_sec": ttpi_training_time_sec,
+        "total_time_sec": total_time_sec,
         "final_metrics": final_metrics,
         "eval_history": eval_history,
         "torch_version": torch.__version__,
@@ -629,6 +691,10 @@ def main():
         "best_metrics": best_metrics,
         "best_tradeoff_metrics": best_tradeoff["metrics"],
         "paper_metrics": paper_metrics,
+        "status": status,
+        "oom": oom,
+        "error_type": error_type,
+        "error_message": error_message,
         "stopped_early": stopped_early,
         "early_stop_success": args.early_stop_success,
         "early_stop_mu": args.early_stop_mu,
@@ -694,7 +760,7 @@ def main():
         train_data=ttpi.train_data,
         diagnostics=ttpi.diagnostics,
         peak_memory_mb=peak_memory_mb,
-        status="ok",
+        status=status,
     )
     standard_file = diagnostics_dir / "run_json" / f"{task_name}.standard.json"
     standard_file.parent.mkdir(parents=True, exist_ok=True)
@@ -711,6 +777,8 @@ def main():
     print(f"[DONE] saved standard JSON log to {standard_file}")
     print(f"[DONE] appended summary to {summary_csv}")
     print(json.dumps(result["final_metrics"], indent=2, ensure_ascii=False))
+    if caught_exception is not None:
+        raise caught_exception
 
 if __name__ == "__main__":
     main()

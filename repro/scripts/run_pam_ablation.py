@@ -25,7 +25,16 @@ def add_arg(cmd: list[str], name: str, value) -> None:
         cmd.extend([name, str(value)])
 
 
-def result_path(env_name: str, defaults: dict, ordering: str, seed: int) -> Path:
+def result_path(
+    env_name: str,
+    defaults: dict,
+    ordering: str,
+    seed: int,
+    *,
+    permutation_seed: int | None = None,
+    include_permutation_seed: bool = False,
+) -> Path:
+    perm_suffix = f"_permseed{permutation_seed}" if include_permutation_seed and permutation_seed is not None else ""
     task = (
         f"{env_name}"
         f"_state{defaults['n_state']}"
@@ -33,13 +42,18 @@ def result_path(env_name: str, defaults: dict, ordering: str, seed: int) -> Path
         f"_iter{defaults['n_iter']}"
         f"_order{ordering}"
         f"_seed{seed}"
+        f"{perm_suffix}"
     )
     return ROOT / "repro" / "results" / f"{task}.json"
 
 
 def build_run_commands(manifest: dict, *, smoke: bool = False) -> list[dict]:
     defaults = dict(manifest.get("defaults", {}))
-    seeds = [0] if smoke else list(manifest.get("seeds", [0]))
+    seeds = [0] if smoke else list(manifest.get("training_seeds", manifest.get("seeds", [0])))
+    permutation_seeds = [int(defaults.get("order_random_seed", 42))]
+    if manifest.get("permutation_seeds") is not None:
+        permutation_seeds = [0] if smoke else list(manifest.get("permutation_seeds", permutation_seeds))
+    environment_seed = int(manifest.get("environment_seed", defaults.get("env_permutation_seed", 2026)))
     envs = list(manifest.get("environments", []))
     orderings = list(manifest.get("orderings", []))
     if smoke:
@@ -55,23 +69,40 @@ def build_run_commands(manifest: dict, *, smoke: bool = False) -> list[dict]:
     commands: list[dict] = []
     for env in envs:
         for seed in seeds:
-            for ordering in orderings:
-                cmd = [sys.executable, str(ROOT / "repro" / "scripts" / "run_hardmove.py")]
-                add_arg(cmd, "--n-actuator", env["n_actuator"])
-                add_arg(cmd, "--env-variant", env.get("env_variant", "standard"))
-                add_arg(cmd, "--seed", seed)
-                add_arg(cmd, "--action-order", ordering)
-                for key, value in defaults.items():
-                    add_arg(cmd, "--" + key.replace("_", "-"), value)
-                commands.append(
-                    {
-                        "env": env.get("name", f"HM{env['n_actuator']}"),
-                        "seed": seed,
-                        "ordering": ordering,
-                        "cmd": cmd,
-                        "result": str(result_path(env.get("name", f"HM{env['n_actuator']}"), defaults, ordering, seed)),
-                    }
-                )
+            for permutation_seed in permutation_seeds:
+                for ordering in orderings:
+                    cmd = [sys.executable, str(ROOT / "repro" / "scripts" / "run_hardmove.py")]
+                    add_arg(cmd, "--n-actuator", env["n_actuator"])
+                    add_arg(cmd, "--env-variant", env.get("env_variant", "standard"))
+                    add_arg(cmd, "--training-seed", seed)
+                    add_arg(cmd, "--environment-seed", env.get("environment_seed", environment_seed))
+                    add_arg(cmd, "--permutation-seed", permutation_seed)
+                    add_arg(cmd, "--state-sampling-seed", seed)
+                    add_arg(cmd, "--action-order", ordering)
+                    for key, value in defaults.items():
+                        add_arg(cmd, "--" + key.replace("_", "-"), value)
+                    commands.append(
+                        {
+                            "env": env.get("name", f"HM{env['n_actuator']}"),
+                            "seed": seed,
+                            "training_seed": seed,
+                            "environment_seed": env.get("environment_seed", environment_seed),
+                            "permutation_seed": permutation_seed,
+                            "state_sampling_seed": seed,
+                            "ordering": ordering,
+                            "cmd": cmd,
+                            "result": str(
+                                result_path(
+                                    env.get("name", f"HM{env['n_actuator']}"),
+                                    defaults,
+                                    ordering,
+                                    seed,
+                                    permutation_seed=permutation_seed,
+                                    include_permutation_seed=len(permutation_seeds) > 1,
+                                )
+                            ),
+                        }
+                    )
     return commands
 
 
@@ -119,7 +150,20 @@ def build_spectrum_commands(manifest: dict, *, smoke: bool = False) -> list[list
 def write_manifest_csv(commands: list[dict], path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=["env", "seed", "ordering", "result", "cmd"])
+        writer = csv.DictWriter(
+            f,
+            fieldnames=[
+                "env",
+                "seed",
+                "training_seed",
+                "environment_seed",
+                "permutation_seed",
+                "state_sampling_seed",
+                "ordering",
+                "result",
+                "cmd",
+            ],
+        )
         writer.writeheader()
         for item in commands:
             writer.writerow({**item, "cmd": " ".join(item["cmd"])})

@@ -13,8 +13,15 @@ from typing import Any
 
 REQUIRED_SUMMARY_FIELDS = [
     "seed",
+    "training_seed",
+    "environment_seed",
+    "permutation_seed",
+    "state_sampling_seed",
     "env",
     "ordering",
+    "canonical_ordering",
+    "display_ordering",
+    "baseline_category",
     "la_objective",
     "peak_cut_objective",
     "rankaware_proxy_objective",
@@ -30,23 +37,33 @@ REQUIRED_SUMMARY_FIELDS = [
     "tt_cross_calls",
     "tt_cross_function_evals",
     "queried_points_total",
+    "ordering_search_time_sec",
+    "ttpi_training_time_sec",
+    "total_time_sec",
+    "status",
+    "oom",
+    "error_type",
+    "error_message",
 ]
 
 ORDERING_GROUPS = {
-    "local": "baseline",
-    "opposite_pair": "baseline",
-    "badsplit": "negative_control",
-    "random": "negative_control",
-    "pam_greedy": "physics_pam",
-    "pam_spectral": "physics_pam",
-    "pam_spectral_refined": "physics_pam",
-    "pam_greedy_refined": "physics_pam",
-    "block_pam": "block_pam",
-    "free_pam": "free_permutation",
-    "sensitivity_pam": "sensitivity",
-    "rankaware_proxy_pam": "rankaware",
-    "rankaware_spectral_pam": "rankaware",
-    "hybrid_pam": "hybrid",
+    "local": "primary_baseline",
+    "opposite_pair": "legacy_diagnostic",
+    "badsplit": "diagnostic_control",
+    "random": "diagnostic_control",
+    "reverse_blocks": "diagnostic_control",
+    "flip_within_block": "diagnostic_control",
+    "pam_greedy": "surrogate_baseline",
+    "pam_spectral": "surrogate_baseline",
+    "pam_spectral_refined": "surrogate_baseline",
+    "pam_greedy_refined": "surrogate_baseline",
+    "block_pam": "ablation",
+    "free_pam": "ablation",
+    "peakcut_pam": "surrogate_baseline",
+    "sensitivity_pam": "surrogate_baseline",
+    "rankaware_proxy_pam": "main_method",
+    "rankaware_spectral_pam": "ablation",
+    "hybrid_pam": "main_method",
 }
 
 
@@ -255,10 +272,41 @@ def summary_row(
     val_stats = rank_stats(profiles["value"])
     final_metrics = result.get("final_metrics") or {}
     best_tradeoff = result.get("best_tradeoff_metrics") or {}
+    training_seed = result.get("training_seed", result.get("seed"))
+    environment_seed = result.get("environment_seed", result.get("env_permutation_seed", training_seed))
+    permutation_seed = result.get("permutation_seed", result.get("order_random_seed", 0))
+    state_sampling_seed = result.get("state_sampling_seed", training_seed)
+    ordering_metadata = result.get("pam_order_metadata") or {}
+    ordering_search_time_sec = _as_float(result.get("ordering_search_time_sec"), 0.0)
+    ttpi_training_time_sec = _as_float(
+        result.get("ttpi_training_time_sec", result.get("train_time_sec")),
+        0.0,
+    )
+    total_time_sec = _as_float(
+        result.get("total_time_sec"),
+        ordering_search_time_sec + ttpi_training_time_sec,
+    )
+    status = result.get("status", "ok")
     row = {
         "seed": result.get("seed"),
+        "training_seed": training_seed,
+        "environment_seed": environment_seed,
+        "permutation_seed": permutation_seed,
+        "state_sampling_seed": state_sampling_seed,
         "env": result.get("env_name", result.get("task")),
         "ordering": result.get("action_order_name"),
+        "canonical_ordering": result.get(
+            "canonical_ordering",
+            ordering_metadata.get("canonical_name", result.get("action_order_name")),
+        ),
+        "display_ordering": result.get(
+            "display_ordering",
+            ordering_metadata.get("display_name", result.get("action_order_name")),
+        ),
+        "baseline_category": result.get(
+            "baseline_category",
+            ordering_metadata.get("baseline_category", ordering_group(result.get("action_order_name"))),
+        ),
         "ordering_group": ordering_group(result.get("action_order_name")),
         "la_objective": result.get("pam_order_objective"),
         "peak_cut_objective": result.get("pam_order_peak_cut_objective"),
@@ -267,17 +315,25 @@ def summary_row(
         "adv_rank_mean": adv_stats["mean"],
         "val_rank_max": val_stats["max"],
         "val_rank_mean": val_stats["mean"],
-        "peak_memory_mb": peak_memory_mb,
-        "runtime_sec": result.get("train_time_sec"),
-        "success_rate": final_metrics.get("success_rate"),
-        "avg_return": final_metrics.get("cum_reward_mean"),
-        "mu": final_metrics.get("mu_success"),
+        "peak_memory_mb": peak_memory_mb if peak_memory_mb is not None else "",
+        "runtime_sec": total_time_sec,
+        "train_time_sec": result.get("train_time_sec", ttpi_training_time_sec),
+        "ordering_search_time_sec": ordering_search_time_sec,
+        "ttpi_training_time_sec": ttpi_training_time_sec,
+        "total_time_sec": total_time_sec,
+        "success_rate": final_metrics.get("success_rate", ""),
+        "avg_return": final_metrics.get("cum_reward_mean", ""),
+        "mu": final_metrics.get("mu_success", ""),
         "best_success_rate": best_tradeoff.get("success_rate"),
         "best_mu": best_tradeoff.get("mu_success"),
         "best_s_times_mu": best_tradeoff.get("S_times_mu", best_tradeoff.get("tradeoff_score")),
         "tt_cross_calls": diagnostics.get("tt_cross_calls", 0),
         "tt_cross_function_evals": diagnostics.get("tt_cross_function_evals", 0),
         "queried_points_total": diagnostics.get("queried_points_total", 0),
+        "status": status,
+        "oom": bool(result.get("oom", status == "oom")),
+        "error_type": result.get("error_type", ""),
+        "error_message": result.get("error_message", ""),
         "adv_rank_profile_json": json.dumps(profiles["advantage"]),
         "val_rank_profile_json": json.dumps(profiles["value"]),
         "policy_rank_profile_json": json.dumps(profiles["policy"]),
@@ -309,11 +365,42 @@ def standard_run_log(
     adv_stats = rank_stats(profiles["advantage"])
     val_stats = rank_stats(profiles["value"])
     final_metrics = result.get("final_metrics") or {}
+    training_seed = result.get("training_seed", result.get("seed"))
+    environment_seed = result.get("environment_seed", result.get("env_permutation_seed", training_seed))
+    permutation_seed = result.get("permutation_seed", result.get("order_random_seed", 0))
+    state_sampling_seed = result.get("state_sampling_seed", training_seed)
+    ordering_metadata = result.get("pam_order_metadata") or {}
+    ordering_search_time_sec = _as_float(result.get("ordering_search_time_sec"), 0.0)
+    ttpi_training_time_sec = _as_float(
+        result.get("ttpi_training_time_sec", result.get("train_time_sec")),
+        0.0,
+    )
+    total_time_sec = _as_float(
+        result.get("total_time_sec"),
+        ordering_search_time_sec + ttpi_training_time_sec,
+    )
+    status = result.get("status", status)
     return {
         "run_id": run_id,
         "seed": result.get("seed"),
+        "training_seed": training_seed,
+        "environment_seed": environment_seed,
+        "permutation_seed": permutation_seed,
+        "state_sampling_seed": state_sampling_seed,
         "env": result.get("env_name", result.get("task")),
         "ordering": result.get("action_order_name"),
+        "canonical_ordering": result.get(
+            "canonical_ordering",
+            ordering_metadata.get("canonical_name", result.get("action_order_name")),
+        ),
+        "display_ordering": result.get(
+            "display_ordering",
+            ordering_metadata.get("display_name", result.get("action_order_name")),
+        ),
+        "baseline_category": result.get(
+            "baseline_category",
+            ordering_metadata.get("baseline_category", ordering_group(result.get("action_order_name"))),
+        ),
         "ordering_group": ordering_group(result.get("action_order_name")),
         "objectives": {
             "la": result.get("pam_order_objective"),
@@ -322,12 +409,16 @@ def standard_run_log(
         },
         "resources": {
             "peak_memory_mb": peak_memory_mb,
-            "runtime_sec": result.get("train_time_sec"),
+            "runtime_sec": total_time_sec,
+            "train_time_sec": result.get("train_time_sec", ttpi_training_time_sec),
+            "ordering_search_time_sec": ordering_search_time_sec,
+            "ttpi_training_time_sec": ttpi_training_time_sec,
+            "total_time_sec": total_time_sec,
         },
         "performance": {
-            "success_rate": final_metrics.get("success_rate"),
-            "avg_return": final_metrics.get("cum_reward_mean"),
-            "mu": final_metrics.get("mu_success"),
+            "success_rate": final_metrics.get("success_rate", ""),
+            "avg_return": final_metrics.get("cum_reward_mean", ""),
+            "mu": final_metrics.get("mu_success", ""),
         },
         "tt_cross": {
             "calls": diagnostics.get("tt_cross_calls", 0),
@@ -343,6 +434,11 @@ def standard_run_log(
             "adv_rank_profile": profiles["advantage"],
             "val_rank_profile": profiles["value"],
             "policy_rank_profile": profiles["policy"],
+        },
+        "error": {
+            "oom": bool(result.get("oom", status == "oom")),
+            "error_type": result.get("error_type", ""),
+            "error_message": result.get("error_message", ""),
         },
         "status": status,
     }
