@@ -37,6 +37,8 @@ ORDERING_NAMES = (
     "local",
     "badsplit",
     "random",
+    "reverse_blocks",
+    "flip_within_block",
     "opposite_pair",
     "pam_spectral",
     "pam_greedy",
@@ -44,11 +46,38 @@ ORDERING_NAMES = (
     "pam_greedy_refined",
     "block_pam",
     "free_pam",
+    "peakcut_pam",
     "sensitivity_pam",
     "rankaware_proxy_pam",
     "rankaware_spectral_pam",
     "hybrid_pam",
 )
+
+
+ORDERING_METADATA = {
+    "local": ("local", "Local", "primary_baseline", False),
+    "random": ("random", "Random", "diagnostic_control", False),
+    "badsplit": ("badsplit", "BadSplit", "diagnostic_control", False),
+    "reverse_blocks": ("reverse_blocks", "ReverseBlocks", "diagnostic_control", False),
+    "flip_within_block": ("flip_within_block", "FlipWithinBlock", "diagnostic_control", False),
+    "opposite_pair": (
+        "opposite_interleave_legacy",
+        "OppositeInterleaveLegacy",
+        "legacy_diagnostic",
+        True,
+    ),
+    "pam_spectral": ("pam_spectral", "SpectralPAM", "surrogate_baseline", False),
+    "pam_greedy": ("pam_greedy", "GreedyPAM", "surrogate_baseline", False),
+    "pam_spectral_refined": ("pam_spectral_refined", "SpectralPAMRefined", "surrogate_baseline", False),
+    "pam_greedy_refined": ("pam_greedy_refined", "GreedyPAMRefined", "surrogate_baseline", False),
+    "block_pam": ("block_pam", "BlockPAM", "ablation", False),
+    "free_pam": ("free_pam", "FreePAM", "ablation", False),
+    "peakcut_pam": ("peakcut_pam", "PeakCutPAM", "surrogate_baseline", False),
+    "sensitivity_pam": ("sensitivity_pam", "SensitivityPAM", "surrogate_baseline", False),
+    "rankaware_proxy_pam": ("rankaware_proxy_pam", "RankAwareProxyPAM", "main_method", False),
+    "rankaware_spectral_pam": ("rankaware_spectral_pam", "RankAwareSpectralPAM", "ablation", False),
+    "hybrid_pam": ("hybrid_pam", "HybridPAM", "main_method", False),
+}
 
 
 def weighted_linear_arrangement(order: Iterable[int], coupling: Matrix) -> float:
@@ -193,8 +222,24 @@ def badsplit_order(n_actuator: int) -> list[int]:
     return list(range(0, n_modes, 2)) + list(range(1, n_modes, 2))
 
 
+def reverse_blocks_order(n_actuator: int) -> list[int]:
+    """Reverse actuator blocks while preserving [acc_i, sw_i] adjacency."""
+    order: list[int] = []
+    for actuator in reversed(range(n_actuator)):
+        order.extend([2 * actuator, 2 * actuator + 1])
+    return order
+
+
+def flip_within_block_order(n_actuator: int) -> list[int]:
+    """Flip every actuator pair: [sw_i, acc_i] repeated."""
+    order: list[int] = []
+    for actuator in range(n_actuator):
+        order.extend([2 * actuator + 1, 2 * actuator])
+    return order
+
+
 def opposite_pair_order(n_actuator: int) -> list[int]:
-    """Pair-preserving order that places opposite actuator blocks nearby."""
+    """Legacy pair-preserving interleave that places opposite blocks nearby."""
     if n_actuator % 2:
         return local_pair_order(n_actuator)
     half = n_actuator // 2
@@ -407,6 +452,8 @@ def build_hardmove_orders(
         "local": local_pair_order(n_actuator),
         "badsplit": badsplit_order(n_actuator),
         "random": random_order(n_actuator, random_seed),
+        "reverse_blocks": reverse_blocks_order(n_actuator),
+        "flip_within_block": flip_within_block_order(n_actuator),
         "opposite_pair": opposite_pair_order(n_actuator),
         "pam_spectral": spectral_order(coupling),
         "pam_greedy": greedy_adjacent_order(coupling),
@@ -415,6 +462,18 @@ def build_hardmove_orders(
     candidates["pam_greedy_refined"] = improve_by_adjacent_swaps(candidates["pam_greedy"], coupling)
     candidates["block_pam"] = block_preserving_order(n_actuator, coupling, allow_internal_flip=True)
     candidates["free_pam"] = free_pam_order(coupling)
+    candidates["peakcut_pam"] = min(
+        [
+            candidates["local"],
+            candidates["pam_spectral"],
+            candidates["pam_greedy"],
+            candidates["block_pam"],
+            candidates["free_pam"],
+            candidates["reverse_blocks"],
+            random_order(n_actuator, random_seed + 503),
+        ],
+        key=lambda order: peak_cut_cost(order, coupling),
+    )
 
     sensitivity_coupling = sensitivity_weighted_coupling(coupling, n_actuator)
     candidates["sensitivity_pam"] = block_preserving_order(
@@ -444,17 +503,24 @@ def build_hardmove_orders(
     results: dict[str, OrderingResult] = {}
     for name, order in candidates.items():
         order = validate_order(order, len(coupling))
+        canonical_name, display_name, baseline_category, deprecated_alias = ORDERING_METADATA[name]
         results[name] = OrderingResult(
             name=name,
             order=order,
             objective=weighted_linear_arrangement(order, coupling),
             adjacency_score=adjacency_score(order, coupling),
             metadata={
+                "canonical_name": canonical_name,
+                "display_name": display_name,
+                "baseline_category": baseline_category,
+                "deprecated_alias": deprecated_alias,
                 "n_actuator": n_actuator,
                 "pair_weight": pair_weight,
                 "neighbor_weight": neighbor_weight,
                 "opposite_weight": opposite_weight,
                 "random_seed": random_seed,
+                "permutation_seed": random_seed,
+                "ordering_seed": random_seed,
                 "peak_cut_objective": peak_cut_cost(order, coupling),
                 "rankaware_proxy_objective": rankaware_proxy_cost(
                     order, coupling, lambda_sum=1.0, lambda_peak=2.0
