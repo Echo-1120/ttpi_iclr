@@ -26,7 +26,24 @@ class PamManifestTests(unittest.TestCase):
         commands = build_run_commands(manifest, smoke=True)
         self.assertEqual(len(commands), 4)
         self.assertTrue(all(item["seed"] == 0 for item in commands))
+        self.assertTrue(all(item["training_seed"] == 0 for item in commands))
+        self.assertTrue(all(item["permutation_seed"] == 42 for item in commands))
         self.assertTrue(all("--n-iter 2" in " ".join(item["cmd"]) for item in commands))
+        self.assertTrue(all("--training-seed 0" in " ".join(item["cmd"]) for item in commands))
+        self.assertTrue(all("--permutation-seed 42" in " ".join(item["cmd"]) for item in commands))
+
+    def test_manifest_can_expand_permutation_seed_dimension(self):
+        manifest = {
+            "training_seeds": [0],
+            "permutation_seeds": [3, 4],
+            "orderings": ["random"],
+            "environments": [{"name": "HM8", "n_actuator": 8, "env_variant": "standard"}],
+            "defaults": {"n_state": 20, "n_action": 20, "n_iter": 2},
+        }
+        commands = build_run_commands(manifest)
+        self.assertEqual(len(commands), 2)
+        self.assertEqual({item["permutation_seed"] for item in commands}, {3, 4})
+        self.assertTrue(all("permseed" in item["result"] for item in commands))
 
 
 if __name__ == "__main__":

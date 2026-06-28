@@ -10,12 +10,26 @@ from repro.pam_validation import validate_log_fields
 def dummy_result():
     return {
         "seed": 0,
+        "training_seed": 0,
+        "environment_seed": 2026,
+        "permutation_seed": 42,
+        "state_sampling_seed": 17,
         "env_name": "HM8",
         "action_order_name": "local",
+        "canonical_ordering": "local",
+        "display_ordering": "Local",
+        "baseline_category": "primary_baseline",
         "pam_order_objective": 448.0,
         "pam_order_peak_cut_objective": 46.0,
         "pam_order_rankaware_proxy_objective": 58.2953,
         "train_time_sec": 13.8,
+        "ordering_search_time_sec": 0.2,
+        "ttpi_training_time_sec": 13.8,
+        "total_time_sec": 14.0,
+        "status": "ok",
+        "oom": False,
+        "error_type": "",
+        "error_message": "",
         "final_metrics": {"success_rate": 0.0, "cum_reward_mean": -1.0, "mu_success": 0.0},
         "best_tradeoff_metrics": {"success_rate": 0.0, "mu_success": 0.0, "S_times_mu": 0.0},
     }
@@ -47,7 +61,13 @@ class PamDiagnosticsTests(unittest.TestCase):
             peak_memory_mb=648.7,
         )
         self.assertTrue(validate_log_fields(row))
-        self.assertEqual(row["ordering_group"], "baseline")
+        self.assertEqual(row["ordering_group"], "primary_baseline")
+        self.assertEqual(row["training_seed"], 0)
+        self.assertEqual(row["environment_seed"], 2026)
+        self.assertEqual(row["permutation_seed"], 42)
+        self.assertEqual(row["state_sampling_seed"], 17)
+        self.assertEqual(row["runtime_sec"], 14.0)
+        self.assertAlmostEqual(row["total_time_sec"], row["ordering_search_time_sec"] + row["ttpi_training_time_sec"])
 
     def test_standard_json_template_shape(self):
         log = standard_run_log(
@@ -60,6 +80,32 @@ class PamDiagnosticsTests(unittest.TestCase):
         self.assertEqual(log["objectives"]["la"], 448.0)
         self.assertEqual(log["tt_cross"]["function_evals_total"], 681826)
         self.assertEqual(log["ranks"]["adv_rank_profile"], [3, 2, 1])
+        self.assertEqual(log["training_seed"], 0)
+        self.assertEqual(log["resources"]["ordering_search_time_sec"], 0.2)
+        self.assertEqual(log["resources"]["total_time_sec"], 14.0)
+        self.assertFalse(log["error"]["oom"])
+
+    def test_failed_run_summary_keeps_schema_without_performance_values(self):
+        result = dummy_result()
+        result.update(
+            {
+                "status": "oom",
+                "oom": True,
+                "error_type": "OutOfMemoryError",
+                "error_message": "simulated",
+                "final_metrics": {},
+            }
+        )
+        row = summary_row(
+            result=result,
+            train_data=dummy_train_data(),
+            diagnostics=dummy_diagnostics(),
+            peak_memory_mb=999.0,
+        )
+        self.assertTrue(validate_log_fields(row))
+        self.assertEqual(row["status"], "oom")
+        self.assertTrue(row["oom"])
+        self.assertEqual(row["success_rate"], "")
 
     def test_multi_round_csv_header_is_stable_when_fields_expand(self):
         with tempfile.TemporaryDirectory() as tmp:
