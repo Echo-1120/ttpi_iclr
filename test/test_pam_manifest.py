@@ -45,6 +45,25 @@ class PamManifestTests(unittest.TestCase):
         self.assertEqual({item["permutation_seed"] for item in commands}, {3, 4})
         self.assertTrue(all("permseed" in item["result"] for item in commands))
 
+    def test_stage_two_smoke_manifest_only_repeats_random_permutation_seeds(self):
+        manifest = json.loads((ROOT / "repro" / "experiments" / "pam_baseline_smoke_manifest.json").read_text())
+        commands = build_run_commands(manifest, smoke=True)
+        orderings = [item["ordering"] for item in commands]
+        random_items = [item for item in commands if item["ordering"] == "random"]
+        non_random_items = [item for item in commands if item["ordering"] != "random"]
+
+        self.assertEqual(len(commands), 11)
+        self.assertEqual(len(random_items), 3)
+        self.assertEqual(len(non_random_items), 8)
+        self.assertEqual({item["permutation_seed"] for item in random_items}, {0, 1, 2})
+        self.assertTrue(all(item["permutation_seed"] == 0 for item in non_random_items))
+        self.assertEqual(len(set(orderings)), 9)
+        self.assertTrue(all(item["env"] == "HM8" for item in commands))
+        self.assertTrue(all(item["training_seed"] == 0 for item in commands))
+        self.assertTrue(all("stage2smoke" in item["result"] for item in commands))
+        self.assertTrue(all("permseed" in item["result"] for item in random_items))
+        self.assertTrue(all("permseed" not in item["result"] for item in non_random_items))
+
 
 if __name__ == "__main__":
     unittest.main()

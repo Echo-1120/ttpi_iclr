@@ -22,6 +22,12 @@ sys.path.insert(0, str(ROOT))
 
 from ttpi import TTPI
 from dynamic_systems import HardMove
+from repro.hardmove_variants import (
+    canonical_env_variant,
+    make_env_permutation,
+    transform_hardmove_action,
+    variant_display_name,
+)
 from repro.pam_ordering import ORDERING_NAMES, build_hardmove_orders
 from repro.diagnostics import (
     append_csv,
@@ -230,6 +236,8 @@ def main():
     parser.add_argument("--gamma", type=float, default=0.99)
     parser.add_argument("--device", type=str, default="cuda")
     parser.add_argument("--target-radius", type=float, default=0.02)
+    parser.add_argument("--run-tag", type=str, default="")
+    parser.add_argument("--include-permutation-seed-in-run-id", action="store_true")
 
     parser.add_argument("--max-batch-v", type=int, default=10000)
     parser.add_argument("--max-batch-a", type=int, default=100000)
@@ -257,7 +265,7 @@ def main():
     )
     parser.add_argument(
         "--env-variant",
-        choices=["standard", "index_permuted", "cross_coupled"],
+        choices=["standard", "index_permuted", "actuator_relabelled", "cross_coupled"],
         default="standard",
         help="HardMove stress-test variant.",
     )
@@ -277,6 +285,7 @@ def main():
     args.seed = training_seed
     args.env_permutation_seed = environment_seed
     args.order_random_seed = permutation_seed
+    env_variant_canonical = canonical_env_variant(args.env_variant)
 
     if args.action_order == "opposite_pair":
         warnings.warn(
@@ -300,6 +309,8 @@ def main():
     env_name = f"HM{args.n_actuator}"
     if args.env_variant != "standard":
         env_name = f"{env_name}_{args.env_variant}"
+    perm_seed_suffix = f"_permseed{permutation_seed}" if args.include_permutation_seed_in_run_id else ""
+    run_tag_suffix = f"_{args.run_tag}" if args.run_tag else ""
     task_name = (
         f"{env_name}"
         f"_state{args.n_state}"
@@ -307,6 +318,8 @@ def main():
         f"_iter{args.n_iter}"
         f"_order{args.action_order}"
         f"_seed{args.seed}"
+        f"{perm_seed_suffix}"
+        f"{run_tag_suffix}"
     )
 
     L = 1.0
@@ -365,29 +378,17 @@ def main():
     )
 
     env_permutation = list(range(args.n_actuator))
-    if args.env_variant == "index_permuted":
-        g_perm = torch.Generator(device="cpu")
-        g_perm.manual_seed(args.env_permutation_seed + args.n_actuator)
-        env_permutation = torch.randperm(args.n_actuator, generator=g_perm).tolist()
-
-    env_permutation_t = torch.tensor(env_permutation, device=device, dtype=torch.long)
+    if env_variant_canonical == "actuator_relabelled":
+        env_permutation = make_env_permutation(args.n_actuator, args.env_permutation_seed)
 
     def transform_physical_action(action_phys):
-        action_phys = action_phys.clone()
-        if args.env_variant == "index_permuted":
-            reshaped = action_phys.view(-1, args.n_actuator, 2)
-            action_phys = reshaped[:, env_permutation_t, :].reshape(action_phys.shape)
-        elif args.env_variant == "cross_coupled":
-            reshaped = action_phys.view(-1, args.n_actuator, 2).clone()
-            acc = reshaped[:, :, 0]
-            sw = reshaped[:, :, 1]
-            left = torch.roll(acc, shifts=1, dims=1)
-            right = torch.roll(acc, shifts=-1, dims=1)
-            acc_mixed = acc + args.cross_coupling_strength * 0.5 * (left + right)
-            reshaped[:, :, 0] = acc_mixed
-            reshaped[:, :, 1] = sw
-            action_phys = reshaped.reshape(action_phys.shape)
-        return action_phys
+        return transform_hardmove_action(
+            action_phys=action_phys,
+            n_actuator=args.n_actuator,
+            variant=args.env_variant,
+            permutation=env_permutation,
+            cross_coupling_strength=args.cross_coupling_strength,
+        )
 
     def forward_model(state, action):
         return dyn_system.forward_simulate(state, transform_physical_action(action[..., action_inverse]))
@@ -607,6 +608,8 @@ def main():
         "task": f"HM({args.n_actuator})",
         "env_name": env_name,
         "env_variant": args.env_variant,
+        "env_variant_canonical": env_variant_canonical,
+        "env_variant_display": variant_display_name(args.env_variant),
         "env_permutation": env_permutation,
         "cross_coupling_strength": args.cross_coupling_strength,
         "seed": args.seed,

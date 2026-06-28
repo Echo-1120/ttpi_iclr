@@ -21,6 +21,11 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 from dynamic_systems import HardMove
+from repro.hardmove_variants import (
+    canonical_env_variant,
+    make_env_permutation,
+    transform_hardmove_action,
+)
 from repro.pam_ordering import build_hardmove_orders
 
 torch.set_default_dtype(torch.float64)
@@ -92,21 +97,6 @@ def multi_to_action(indices: torch.Tensor, domains: list[torch.Tensor]) -> torch
     return torch.stack(values, dim=1)
 
 
-def transform_action(action_phys: torch.Tensor, n_actuator: int, env_variant: str, permutation: list[int], strength: float) -> torch.Tensor:
-    action_phys = action_phys.clone()
-    if env_variant == "index_permuted":
-        perm = torch.tensor(permutation, device=action_phys.device, dtype=torch.long)
-        action_phys = action_phys.view(-1, n_actuator, 2)[:, perm, :].reshape(action_phys.shape)
-    elif env_variant == "cross_coupled":
-        reshaped = action_phys.view(-1, n_actuator, 2).clone()
-        acc = reshaped[:, :, 0]
-        left = torch.roll(acc, shifts=1, dims=1)
-        right = torch.roll(acc, shifts=-1, dims=1)
-        reshaped[:, :, 0] = acc + strength * 0.5 * (left + right)
-        action_phys = reshaped.reshape(action_phys.shape)
-    return action_phys
-
-
 @torch.no_grad()
 def evaluate_matrix(
     *,
@@ -140,7 +130,13 @@ def evaluate_matrix(
         )
         action_ordered = multi_to_action(full_idx, domains_ordered)
         action_phys = action_ordered[:, inverse_t]
-        action_phys = transform_action(action_phys, n_actuator, env_variant, permutation, cross_strength)
+        action_phys = transform_hardmove_action(
+            action_phys=action_phys,
+            n_actuator=n_actuator,
+            variant=env_variant,
+            permutation=permutation,
+            cross_coupling_strength=cross_strength,
+        )
         s = state.expand(n_cols, -1)
         values = dyn.reward_state_action(s, action_phys)
         rows.append(values.detach().cpu())
@@ -175,7 +171,11 @@ def effective_rank_relative_sigma1(singular_values: list[float], threshold: floa
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--n-actuator", type=int, required=True)
-    parser.add_argument("--env-variant", choices=["standard", "index_permuted", "cross_coupled"], default="standard")
+    parser.add_argument(
+        "--env-variant",
+        choices=["standard", "index_permuted", "actuator_relabelled", "cross_coupled"],
+        default="standard",
+    )
     parser.add_argument("--env-permutation-seed", type=int, default=2026)
     parser.add_argument("--cross-coupling-strength", type=float, default=0.25)
     parser.add_argument("--n-action", type=int, default=50)
@@ -196,6 +196,7 @@ def main() -> int:
     torch.manual_seed(args.seed)
 
     env_name = f"HM{args.n_actuator}" + ("" if args.env_variant == "standard" else f"_{args.env_variant}")
+    env_variant_canonical = canonical_env_variant(args.env_variant)
     domains_phys = action_domains(args.n_actuator, args.n_action, args.action_grid_cap, device)
     coupling, orders = build_hardmove_orders(args.n_actuator, random_seed=args.seed)
     selected = parse_list(args.orderings)
@@ -203,9 +204,11 @@ def main() -> int:
     states = representative_states(args.k_states, device, args.seed)
     dyn = HardMove(dt=0.01, w_goal=1e3, w_action=1e4, n=args.n_actuator, device=device)
 
-    g_perm = torch.Generator(device="cpu")
-    g_perm.manual_seed(args.env_permutation_seed + args.n_actuator)
-    permutation = torch.randperm(args.n_actuator, generator=g_perm).tolist()
+    permutation = (
+        make_env_permutation(args.n_actuator, args.env_permutation_seed)
+        if env_variant_canonical == "actuator_relabelled"
+        else list(range(args.n_actuator))
+    )
 
     rows: list[dict[str, object]] = []
     summary_rows: list[dict[str, object]] = []
@@ -301,6 +304,7 @@ def main() -> int:
                 "env": env_name,
                 "n_actuator": args.n_actuator,
                 "env_variant": args.env_variant,
+                "env_variant_canonical": env_variant_canonical,
                 "orderings": selected,
                 "thresholds": thresholds,
                 "state_sampling": "half_high_return_proxy_half_latin_hypercube",

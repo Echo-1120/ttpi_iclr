@@ -35,6 +35,8 @@ def result_path(
     include_permutation_seed: bool = False,
 ) -> Path:
     perm_suffix = f"_permseed{permutation_seed}" if include_permutation_seed and permutation_seed is not None else ""
+    run_tag = defaults.get("run_tag", "")
+    tag_suffix = f"_{run_tag}" if run_tag else ""
     task = (
         f"{env_name}"
         f"_state{defaults['n_state']}"
@@ -43,6 +45,7 @@ def result_path(
         f"_order{ordering}"
         f"_seed{seed}"
         f"{perm_suffix}"
+        f"{tag_suffix}"
     )
     return ROOT / "repro" / "results" / f"{task}.json"
 
@@ -52,13 +55,19 @@ def build_run_commands(manifest: dict, *, smoke: bool = False) -> list[dict]:
     seeds = [0] if smoke else list(manifest.get("training_seeds", manifest.get("seeds", [0])))
     permutation_seeds = [int(defaults.get("order_random_seed", 42))]
     if manifest.get("permutation_seeds") is not None:
-        permutation_seeds = [0] if smoke else list(manifest.get("permutation_seeds", permutation_seeds))
+        permutation_seeds = list(manifest.get("permutation_seeds", permutation_seeds))
+    if smoke and manifest.get("smoke_permutation_seeds") is not None:
+        permutation_seeds = list(manifest["smoke_permutation_seeds"])
+    elif smoke and manifest.get("permutation_seeds") is not None:
+        permutation_seeds = [0]
+    permutation_seed_orderings = set(manifest.get("permutation_seed_orderings", ["random"]))
     environment_seed = int(manifest.get("environment_seed", defaults.get("env_permutation_seed", 2026)))
     envs = list(manifest.get("environments", []))
     orderings = list(manifest.get("orderings", []))
     if smoke:
         envs = [envs[0]]
-        orderings = orderings[: min(4, len(orderings))]
+        if not manifest.get("smoke_keep_all_orderings", False):
+            orderings = orderings[: min(4, len(orderings))]
         defaults["n_state"] = min(int(defaults.get("n_state", 40)), 20)
         defaults["n_action"] = min(int(defaults.get("n_action", 50)), 20)
         defaults["n_iter"] = min(int(defaults.get("n_iter", 30)), 2)
@@ -69,14 +78,16 @@ def build_run_commands(manifest: dict, *, smoke: bool = False) -> list[dict]:
     commands: list[dict] = []
     for env in envs:
         for seed in seeds:
-            for permutation_seed in permutation_seeds:
-                for ordering in orderings:
+            for ordering in orderings:
+                seeds_for_ordering = permutation_seeds if ordering in permutation_seed_orderings else [permutation_seeds[0]]
+                for permutation_seed in seeds_for_ordering:
                     cmd = [sys.executable, str(ROOT / "repro" / "scripts" / "run_hardmove.py")]
                     add_arg(cmd, "--n-actuator", env["n_actuator"])
                     add_arg(cmd, "--env-variant", env.get("env_variant", "standard"))
                     add_arg(cmd, "--training-seed", seed)
                     add_arg(cmd, "--environment-seed", env.get("environment_seed", environment_seed))
                     add_arg(cmd, "--permutation-seed", permutation_seed)
+                    add_arg(cmd, "--include-permutation-seed-in-run-id", len(seeds_for_ordering) > 1)
                     add_arg(cmd, "--state-sampling-seed", seed)
                     add_arg(cmd, "--action-order", ordering)
                     for key, value in defaults.items():
@@ -98,7 +109,7 @@ def build_run_commands(manifest: dict, *, smoke: bool = False) -> list[dict]:
                                     ordering,
                                     seed,
                                     permutation_seed=permutation_seed,
-                                    include_permutation_seed=len(permutation_seeds) > 1,
+                                    include_permutation_seed=len(seeds_for_ordering) > 1,
                                 )
                             ),
                         }
