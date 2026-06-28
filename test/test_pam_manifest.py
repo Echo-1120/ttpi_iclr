@@ -64,6 +64,22 @@ class PamManifestTests(unittest.TestCase):
         self.assertTrue(all("permseed" in item["result"] for item in random_items))
         self.assertTrue(all("permseed" not in item["result"] for item in non_random_items))
 
+    def test_formal_server_manifest_is_controlled_and_excludes_legacy_methods(self):
+        manifest = json.loads((ROOT / "repro" / "experiments" / "pam_formal_server_manifest.json").read_text())
+        commands = build_run_commands(manifest)
+        orderings = set(manifest["orderings"])
+        random_items = [item for item in commands if item["ordering"] == "random"]
+        non_random_items = [item for item in commands if item["ordering"] != "random"]
+
+        self.assertEqual(len(commands), 1050)
+        self.assertNotIn("opposite_pair", orderings)
+        self.assertNotIn("rankaware_spectral_pam", orderings)
+        self.assertIn("rankaware_proxy_pam", orderings)
+        self.assertIn("hybrid_pam", orderings)
+        self.assertEqual({item["permutation_seed"] for item in random_items}, {0, 1, 2})
+        self.assertTrue(all(item["permutation_seed"] == 0 for item in non_random_items))
+        self.assertTrue(all("formal5080" in item["result"] for item in commands))
+
 
 if __name__ == "__main__":
     unittest.main()
