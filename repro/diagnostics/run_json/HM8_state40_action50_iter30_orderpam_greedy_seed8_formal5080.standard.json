@@ -1,0 +1,97 @@
+{
+  "run_id": "HM8_state40_action50_iter30_orderpam_greedy_seed8_formal5080",
+  "seed": 8,
+  "training_seed": 8,
+  "environment_seed": 2026,
+  "permutation_seed": 0,
+  "state_sampling_seed": 8,
+  "env": "HM8",
+  "ordering": "pam_greedy",
+  "canonical_ordering": "pam_greedy",
+  "display_ordering": "GreedyPAM",
+  "baseline_category": "surrogate_baseline",
+  "ordering_group": "surrogate_baseline",
+  "objectives": {
+    "la": 336.0,
+    "peak_cut": 30.0,
+    "rankaware_proxy": 53.6882932872699
+  },
+  "resources": {
+    "peak_memory_mb": 3933.173248,
+    "runtime_sec": 193.38418316841125,
+    "train_time_sec": 193.37774991989136,
+    "ordering_search_time_sec": 0.006433248519897461,
+    "ttpi_training_time_sec": 193.37774991989136,
+    "total_time_sec": 193.38418316841125
+  },
+  "performance": {
+    "success_rate": 0.53,
+    "avg_return": -345322836.480294,
+    "mu": 0.8990702002639358
+  },
+  "tt_cross": {
+    "calls": 61,
+    "function_evals_total": 37028362,
+    "queried_points_total": 37028362,
+    "process_events": 122
+  },
+  "ranks": {
+    "adv_rank_max": 13.0,
+    "adv_rank_mean": 7.684210526315789,
+    "val_rank_max": 3.0,
+    "val_rank_mean": 2.6666666666666665,
+    "adv_rank_profile": [
+      4,
+      6,
+      7,
+      7,
+      11,
+      8,
+      12,
+      8,
+      13,
+      8,
+      12,
+      7,
+      8,
+      7,
+      7,
+      6,
+      8,
+      5,
+      2
+    ],
+    "val_rank_profile": [
+      3,
+      3,
+      2
+    ],
+    "policy_rank_profile": [
+      6,
+      8,
+      9,
+      9,
+      13,
+      10,
+      14,
+      10,
+      15,
+      10,
+      14,
+      9,
+      10,
+      9,
+      9,
+      8,
+      10,
+      7,
+      2
+    ]
+  },
+  "error": {
+    "oom": false,
+    "error_type": "",
+    "error_message": ""
+  },
+  "status": "ok"
+}

@@ -1,0 +1,97 @@
+{
+  "run_id": "HM8_state40_action50_iter30_orderrankaware_proxy_pam_seed2_formal5080",
+  "seed": 2,
+  "training_seed": 2,
+  "environment_seed": 2026,
+  "permutation_seed": 0,
+  "state_sampling_seed": 2,
+  "env": "HM8",
+  "ordering": "rankaware_proxy_pam",
+  "canonical_ordering": "rankaware_proxy_pam",
+  "display_ordering": "RankAwareProxyPAM",
+  "baseline_category": "main_method",
+  "ordering_group": "main_method",
+  "objectives": {
+    "la": 336.0,
+    "peak_cut": 30.0,
+    "rankaware_proxy": 53.6882932872699
+  },
+  "resources": {
+    "peak_memory_mb": 5350.57408,
+    "runtime_sec": 212.12211513519287,
+    "train_time_sec": 212.11582684516907,
+    "ordering_search_time_sec": 0.006288290023803711,
+    "ttpi_training_time_sec": 212.11582684516907,
+    "total_time_sec": 212.12211513519287
+  },
+  "performance": {
+    "success_rate": 0.37,
+    "avg_return": -343397761.7695207,
+    "mu": 0.9882203223225855
+  },
+  "tt_cross": {
+    "calls": 61,
+    "function_evals_total": 48623446,
+    "queried_points_total": 48623446,
+    "process_events": 122
+  },
+  "ranks": {
+    "adv_rank_max": 17.0,
+    "adv_rank_mean": 9.473684210526315,
+    "val_rank_max": 3.0,
+    "val_rank_mean": 2.6666666666666665,
+    "adv_rank_profile": [
+      5,
+      7,
+      9,
+      8,
+      11,
+      9,
+      13,
+      10,
+      17,
+      12,
+      16,
+      10,
+      13,
+      10,
+      9,
+      6,
+      8,
+      5,
+      2
+    ],
+    "val_rank_profile": [
+      3,
+      3,
+      2
+    ],
+    "policy_rank_profile": [
+      7,
+      9,
+      11,
+      10,
+      13,
+      11,
+      15,
+      12,
+      19,
+      14,
+      18,
+      12,
+      15,
+      12,
+      11,
+      8,
+      10,
+      7,
+      2
+    ]
+  },
+  "error": {
+    "oom": false,
+    "error_type": "",
+    "error_message": ""
+  },
+  "status": "ok"
+}

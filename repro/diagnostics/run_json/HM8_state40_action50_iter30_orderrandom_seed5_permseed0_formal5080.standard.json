@@ -1,0 +1,97 @@
+{
+  "run_id": "HM8_state40_action50_iter30_orderrandom_seed5_permseed0_formal5080",
+  "seed": 5,
+  "training_seed": 5,
+  "environment_seed": 2026,
+  "permutation_seed": 0,
+  "state_sampling_seed": 5,
+  "env": "HM8",
+  "ordering": "random",
+  "canonical_ordering": "random",
+  "display_ordering": "Random",
+  "baseline_category": "diagnostic_control",
+  "ordering_group": "diagnostic_control",
+  "objectives": {
+    "la": 910.0,
+    "peak_cut": 92.0,
+    "rankaware_proxy": 69.29141377889368
+  },
+  "resources": {
+    "peak_memory_mb": 10616.557056,
+    "runtime_sec": 126.7035984992981,
+    "train_time_sec": 126.69736051559448,
+    "ordering_search_time_sec": 0.006237983703613281,
+    "ttpi_training_time_sec": 126.69736051559448,
+    "total_time_sec": 126.7035984992981
+  },
+  "performance": {
+    "success_rate": "",
+    "avg_return": "",
+    "mu": ""
+  },
+  "tt_cross": {
+    "calls": 29,
+    "function_evals_total": 74143078,
+    "queried_points_total": 74143078,
+    "process_events": 56
+  },
+  "ranks": {
+    "adv_rank_max": 17.0,
+    "adv_rank_mean": 8.578947368421053,
+    "val_rank_max": 3.0,
+    "val_rank_mean": 2.6666666666666665,
+    "adv_rank_profile": [
+      3,
+      4,
+      4,
+      4,
+      5,
+      6,
+      7,
+      8,
+      10,
+      13,
+      13,
+      12,
+      15,
+      17,
+      14,
+      13,
+      8,
+      4,
+      3
+    ],
+    "val_rank_profile": [
+      3,
+      3,
+      2
+    ],
+    "policy_rank_profile": [
+      5,
+      6,
+      6,
+      6,
+      7,
+      8,
+      9,
+      10,
+      12,
+      15,
+      15,
+      14,
+      17,
+      19,
+      16,
+      15,
+      10,
+      6,
+      5
+    ]
+  },
+  "error": {
+    "oom": true,
+    "error_type": "OutOfMemoryError",
+    "error_message": "CUDA out of memory. Tried to allocate 6.17 GiB. GPU 0 has a total capacity of 15.47 GiB of which 4.39 GiB is free. Including non-PyTorch memory, this process has 10.43 GiB memory in use. Of the allocated memory 6.30 GiB is allocated by PyTorch, and 3.77 GiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://docs.pytorch.org/docs/stable/notes/cuda.html#optimizing-memory-usage-with-pytorch-cuda-alloc-conf)"
+  },
+  "status": "oom"
+}

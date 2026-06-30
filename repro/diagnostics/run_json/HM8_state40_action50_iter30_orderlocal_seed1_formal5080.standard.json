@@ -1,0 +1,97 @@
+{
+  "run_id": "HM8_state40_action50_iter30_orderlocal_seed1_formal5080",
+  "seed": 1,
+  "training_seed": 1,
+  "environment_seed": 2026,
+  "permutation_seed": 0,
+  "state_sampling_seed": 1,
+  "env": "HM8",
+  "ordering": "local",
+  "canonical_ordering": "local",
+  "display_ordering": "Local",
+  "baseline_category": "primary_baseline",
+  "ordering_group": "primary_baseline",
+  "objectives": {
+    "la": 448.0,
+    "peak_cut": 46.0,
+    "rankaware_proxy": 58.29533159388881
+  },
+  "resources": {
+    "peak_memory_mb": 2421.324288,
+    "runtime_sec": 164.9885392189026,
+    "train_time_sec": 164.98222422599792,
+    "ordering_search_time_sec": 0.006314992904663086,
+    "ttpi_training_time_sec": 164.98222422599792,
+    "total_time_sec": 164.9885392189026
+  },
+  "performance": {
+    "success_rate": 0.58,
+    "avg_return": -268865777.19308203,
+    "mu": 0.9561122891604952
+  },
+  "tt_cross": {
+    "calls": 61,
+    "function_evals_total": 28103010,
+    "queried_points_total": 28103010,
+    "process_events": 122
+  },
+  "ranks": {
+    "adv_rank_max": 7.0,
+    "adv_rank_mean": 5.157894736842105,
+    "val_rank_max": 3.0,
+    "val_rank_mean": 2.6666666666666665,
+    "adv_rank_profile": [
+      4,
+      7,
+      5,
+      4,
+      5,
+      4,
+      5,
+      4,
+      6,
+      6,
+      7,
+      5,
+      7,
+      6,
+      7,
+      5,
+      5,
+      4,
+      2
+    ],
+    "val_rank_profile": [
+      3,
+      3,
+      2
+    ],
+    "policy_rank_profile": [
+      6,
+      9,
+      7,
+      6,
+      7,
+      6,
+      7,
+      6,
+      8,
+      8,
+      9,
+      7,
+      9,
+      8,
+      9,
+      7,
+      7,
+      6,
+      2
+    ]
+  },
+  "error": {
+    "oom": false,
+    "error_type": "",
+    "error_message": ""
+  },
+  "status": "ok"
+}

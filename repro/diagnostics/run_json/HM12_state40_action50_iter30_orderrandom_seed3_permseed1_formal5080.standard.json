@@ -1,0 +1,113 @@
+{
+  "run_id": "HM12_state40_action50_iter30_orderrandom_seed3_permseed1_formal5080",
+  "seed": 3,
+  "training_seed": 3,
+  "environment_seed": 2026,
+  "permutation_seed": 1,
+  "state_sampling_seed": 3,
+  "env": "HM12",
+  "ordering": "random",
+  "canonical_ordering": "random",
+  "display_ordering": "Random",
+  "baseline_category": "diagnostic_control",
+  "ordering_group": "diagnostic_control",
+  "objectives": {
+    "la": 1678.0,
+    "peak_cut": 116.0,
+    "rankaware_proxy": 106.18742327255055
+  },
+  "resources": {
+    "peak_memory_mb": 10634.363392,
+    "runtime_sec": 97.49760413169861,
+    "train_time_sec": 97.47815084457397,
+    "ordering_search_time_sec": 0.01945328712463379,
+    "ttpi_training_time_sec": 97.47815084457397,
+    "total_time_sec": 97.49760413169861
+  },
+  "performance": {
+    "success_rate": "",
+    "avg_return": "",
+    "mu": ""
+  },
+  "tt_cross": {
+    "calls": 19,
+    "function_evals_total": 43910350,
+    "queried_points_total": 43910350,
+    "process_events": 36
+  },
+  "ranks": {
+    "adv_rank_max": 9.0,
+    "adv_rank_mean": 5.7407407407407405,
+    "val_rank_max": 3.0,
+    "val_rank_mean": 2.6666666666666665,
+    "adv_rank_profile": [
+      3,
+      3,
+      3,
+      3,
+      4,
+      5,
+      6,
+      7,
+      6,
+      7,
+      8,
+      7,
+      8,
+      8,
+      9,
+      9,
+      8,
+      8,
+      7,
+      6,
+      5,
+      6,
+      5,
+      5,
+      4,
+      3,
+      2
+    ],
+    "val_rank_profile": [
+      3,
+      3,
+      2
+    ],
+    "policy_rank_profile": [
+      5,
+      5,
+      5,
+      5,
+      6,
+      7,
+      8,
+      9,
+      8,
+      9,
+      10,
+      9,
+      10,
+      10,
+      11,
+      11,
+      10,
+      10,
+      9,
+      8,
+      7,
+      8,
+      7,
+      7,
+      6,
+      5,
+      4
+    ]
+  },
+  "error": {
+    "oom": true,
+    "error_type": "OutOfMemoryError",
+    "error_message": "CUDA out of memory. Tried to allocate 6.17 GiB. GPU 0 has a total capacity of 15.47 GiB of which 5.10 GiB is free. Process 1916578 has 297.45 MiB memory in use. Including non-PyTorch memory, this process has 9.42 GiB memory in use. Of the allocated memory 6.32 GiB is allocated by PyTorch, and 2.74 GiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://docs.pytorch.org/docs/stable/notes/cuda.html#optimizing-memory-usage-with-pytorch-cuda-alloc-conf)"
+  },
+  "status": "oom"
+}
