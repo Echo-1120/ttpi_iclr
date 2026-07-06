@@ -59,6 +59,32 @@ This audit records the true current implementation before any supplementary 5080
 | HM12 | rankaware_proxy_pam | 0 | 10 | 0 | 0 | 10 |
 | HM12 | reverse_blocks | 2 | 8 | 0 | 0 | 10 |
 | HM12 | sensitivity_pam | 9 | 1 | 0 | 0 | 10 |
+| HM12_actuator_relabelled | badsplit | 0 | 10 | 0 | 0 | 10 |
+| HM12_actuator_relabelled | block_pam | 5 | 5 | 0 | 0 | 10 |
+| HM12_actuator_relabelled | flip_within_block | 0 | 10 | 0 | 0 | 10 |
+| HM12_actuator_relabelled | free_pam | 0 | 10 | 0 | 0 | 10 |
+| HM12_actuator_relabelled | hybrid_pam | 2 | 8 | 0 | 0 | 10 |
+| HM12_actuator_relabelled | local | 4 | 6 | 0 | 0 | 10 |
+| HM12_actuator_relabelled | pam_greedy | 0 | 10 | 0 | 0 | 10 |
+| HM12_actuator_relabelled | pam_spectral | 0 | 10 | 0 | 0 | 10 |
+| HM12_actuator_relabelled | peakcut_pam | 0 | 10 | 0 | 0 | 10 |
+| HM12_actuator_relabelled | random | 0 | 30 | 0 | 0 | 30 |
+| HM12_actuator_relabelled | rankaware_proxy_pam | 0 | 10 | 0 | 0 | 10 |
+| HM12_actuator_relabelled | reverse_blocks | 2 | 8 | 0 | 0 | 10 |
+| HM12_actuator_relabelled | sensitivity_pam | 1 | 9 | 0 | 0 | 10 |
+| HM12_cross_coupled | badsplit | 0 | 10 | 0 | 0 | 10 |
+| HM12_cross_coupled | block_pam | 0 | 10 | 0 | 0 | 10 |
+| HM12_cross_coupled | flip_within_block | 0 | 10 | 0 | 0 | 10 |
+| HM12_cross_coupled | free_pam | 0 | 10 | 0 | 0 | 10 |
+| HM12_cross_coupled | hybrid_pam | 0 | 10 | 0 | 0 | 10 |
+| HM12_cross_coupled | local | 0 | 10 | 0 | 0 | 10 |
+| HM12_cross_coupled | pam_greedy | 0 | 10 | 0 | 0 | 10 |
+| HM12_cross_coupled | pam_spectral | 0 | 10 | 0 | 0 | 10 |
+| HM12_cross_coupled | peakcut_pam | 0 | 10 | 0 | 0 | 10 |
+| HM12_cross_coupled | random | 0 | 30 | 0 | 0 | 30 |
+| HM12_cross_coupled | rankaware_proxy_pam | 0 | 10 | 0 | 0 | 10 |
+| HM12_cross_coupled | reverse_blocks | 0 | 10 | 0 | 0 | 10 |
+| HM12_cross_coupled | sensitivity_pam | 0 | 10 | 0 | 0 | 10 |
 | HM16 | badsplit | 0 | 10 | 0 | 0 | 10 |
 | HM16 | block_pam | 0 | 10 | 0 | 0 | 10 |
 | HM16 | flip_within_block | 0 | 10 | 0 | 0 | 10 |
@@ -86,28 +112,41 @@ This audit records the true current implementation before any supplementary 5080
 | HM8 | rankaware_proxy_pam | 10 | 0 | 0 | 0 | 10 |
 | HM8 | reverse_blocks | 10 | 0 | 0 | 0 | 10 |
 | HM8 | sensitivity_pam | 10 | 0 | 0 | 0 | 10 |
-| HM8_actuator_relabelled | badsplit | 0 | 4 | 0 | 0 | 4 |
-| HM8_actuator_relabelled | block_pam | 3 | 0 | 0 | 0 | 3 |
-| HM8_actuator_relabelled | flip_within_block | 0 | 4 | 0 | 0 | 4 |
-| HM8_actuator_relabelled | free_pam | 3 | 0 | 0 | 0 | 3 |
-| HM8_actuator_relabelled | hybrid_pam | 3 | 0 | 0 | 0 | 3 |
-| HM8_actuator_relabelled | local | 4 | 0 | 0 | 0 | 4 |
-| HM8_actuator_relabelled | pam_greedy | 1 | 2 | 0 | 0 | 3 |
-| HM8_actuator_relabelled | pam_spectral | 0 | 3 | 0 | 0 | 3 |
-| HM8_actuator_relabelled | peakcut_pam | 0 | 3 | 0 | 0 | 3 |
-| HM8_actuator_relabelled | random | 0 | 12 | 0 | 0 | 12 |
-| HM8_actuator_relabelled | rankaware_proxy_pam | 2 | 1 | 0 | 0 | 3 |
-| HM8_actuator_relabelled | reverse_blocks | 4 | 0 | 0 | 0 | 4 |
-| HM8_actuator_relabelled | sensitivity_pam | 3 | 0 | 0 | 0 | 3 |
+| HM8_actuator_relabelled | badsplit | 0 | 10 | 0 | 0 | 10 |
+| HM8_actuator_relabelled | block_pam | 10 | 0 | 0 | 0 | 10 |
+| HM8_actuator_relabelled | flip_within_block | 0 | 10 | 0 | 0 | 10 |
+| HM8_actuator_relabelled | free_pam | 10 | 0 | 0 | 0 | 10 |
+| HM8_actuator_relabelled | hybrid_pam | 10 | 0 | 0 | 0 | 10 |
+| HM8_actuator_relabelled | local | 10 | 0 | 0 | 0 | 10 |
+| HM8_actuator_relabelled | pam_greedy | 2 | 8 | 0 | 0 | 10 |
+| HM8_actuator_relabelled | pam_spectral | 0 | 10 | 0 | 0 | 10 |
+| HM8_actuator_relabelled | peakcut_pam | 2 | 8 | 0 | 0 | 10 |
+| HM8_actuator_relabelled | random | 0 | 30 | 0 | 0 | 30 |
+| HM8_actuator_relabelled | rankaware_proxy_pam | 4 | 6 | 0 | 0 | 10 |
+| HM8_actuator_relabelled | reverse_blocks | 10 | 0 | 0 | 0 | 10 |
+| HM8_actuator_relabelled | sensitivity_pam | 10 | 0 | 0 | 0 | 10 |
+| HM8_cross_coupled | badsplit | 0 | 10 | 0 | 0 | 10 |
+| HM8_cross_coupled | block_pam | 0 | 10 | 0 | 0 | 10 |
+| HM8_cross_coupled | flip_within_block | 0 | 10 | 0 | 0 | 10 |
+| HM8_cross_coupled | free_pam | 0 | 10 | 0 | 0 | 10 |
+| HM8_cross_coupled | hybrid_pam | 0 | 10 | 0 | 0 | 10 |
+| HM8_cross_coupled | local | 0 | 10 | 0 | 0 | 10 |
+| HM8_cross_coupled | pam_greedy | 0 | 10 | 0 | 0 | 10 |
+| HM8_cross_coupled | pam_spectral | 0 | 10 | 0 | 0 | 10 |
+| HM8_cross_coupled | peakcut_pam | 0 | 10 | 0 | 0 | 10 |
+| HM8_cross_coupled | random | 0 | 30 | 0 | 0 | 30 |
+| HM8_cross_coupled | rankaware_proxy_pam | 0 | 10 | 0 | 0 | 10 |
+| HM8_cross_coupled | reverse_blocks | 0 | 10 | 0 | 0 | 10 |
+| HM8_cross_coupled | sensitivity_pam | 0 | 10 | 0 | 0 | 10 |
 
 ## Artifact Inventory
-- Summary rows: 511
-- Result JSON files: 535
-- Rank profile CSV files: 507
-- TT-Cross query CSV files: 507
-- TT-Cross process CSV files: 502
-- TT-Round event CSV files: 502
-- Model/checkpoint files under `repro/models`: 0
+- Summary rows: 1059
+- Result JSON files: 1083
+- Rank profile CSV files: 1055
+- TT-Cross query CSV files: 1055
+- TT-Cross process CSV files: 1050
+- TT-Round event CSV files: 1050
+- Model/checkpoint files under `repro/models`: 881
 - Singular spectrum files under `repro/diagnostics/spectra`: 3
 
 ## Field Mapping
