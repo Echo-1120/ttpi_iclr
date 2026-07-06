@@ -51,6 +51,12 @@ ORDERING_NAMES = (
     "rankaware_proxy_pam",
     "rankaware_spectral_pam",
     "hybrid_pam",
+    "sensitivity_lite_fd5",
+    "sensitivity_lite_first_order",
+    "hybrid_block_only",
+    "hybrid_block_plus_physics",
+    "hybrid_block_plus_sensitivity",
+    "hybrid_current",
 )
 
 
@@ -77,6 +83,27 @@ ORDERING_METADATA = {
     "rankaware_proxy_pam": ("rankaware_proxy_pam", "RankAwareProxyPAM", "main_method", False),
     "rankaware_spectral_pam": ("rankaware_spectral_pam", "RankAwareSpectralPAM", "ablation", False),
     "hybrid_pam": ("hybrid_pam", "HybridPAM", "main_method", False),
+    "sensitivity_lite_fd5": ("sensitivity_lite_fd5", "SensitivityLiteFD5", "prestudy_candidate", False),
+    "sensitivity_lite_first_order": (
+        "sensitivity_lite_first_order",
+        "SensitivityLiteFirstOrder",
+        "prestudy_candidate",
+        False,
+    ),
+    "hybrid_block_only": ("hybrid_block_only", "HybridBlockOnly", "prestudy_ablation", False),
+    "hybrid_block_plus_physics": (
+        "hybrid_block_plus_physics",
+        "HybridBlockPlusPhysics",
+        "prestudy_ablation",
+        False,
+    ),
+    "hybrid_block_plus_sensitivity": (
+        "hybrid_block_plus_sensitivity",
+        "HybridBlockPlusSensitivity",
+        "prestudy_ablation",
+        False,
+    ),
+    "hybrid_current": ("hybrid_current", "HybridCurrent", "prestudy_ablation", False),
 }
 
 
@@ -433,6 +460,100 @@ def sensitivity_weighted_coupling(base: Matrix, n_actuator: int) -> Matrix:
     return out
 
 
+def _normalize_extra_coupling(extra: Matrix, target_mean: float = 1.0) -> Matrix:
+    weights = [
+        float(extra[i][j])
+        for i in range(len(extra))
+        for j in range(i + 1, len(extra))
+        if extra[i][j] > 0
+    ]
+    if not weights:
+        return [[0.0 for _ in row] for row in extra]
+    scale = target_mean / (sum(weights) / len(weights))
+    return [[float(value) * scale for value in row] for row in extra]
+
+
+def lite_fd5_sensitivity_coupling(
+    base: Matrix,
+    n_actuator: int,
+    samples: int = 5,
+    fd_eps: float = 1e-2,
+) -> tuple[Matrix, dict]:
+    """Low-cost finite-difference action-effect proxy for prestudy ordering.
+
+    This is intentionally an ordering-construction diagnostic, not a change to
+    TTPI. It estimates which HardMove modes produce aligned velocity changes
+    under five deterministic probe actions, then reuses the block-preserving
+    PAM search on the resulting coupling.
+    """
+    import math
+    import random
+
+    rng = random.Random(314159 + 17 * n_actuator + samples)
+    n_modes = 2 * n_actuator
+    extra = [[0.0 for _ in range(n_modes)] for _ in range(n_modes)]
+    probes = []
+    for sample in range(samples):
+        acc = [rng.uniform(-0.25, 0.25) for _ in range(n_actuator)]
+        switches = [1.0 if ((sample + i) % 2 == 0) else 0.0 for i in range(n_actuator)]
+        probes.append((acc, switches))
+
+    function_calls = 0
+    for acc, switches in probes:
+        effects: list[tuple[float, float]] = []
+        for actuator in range(n_actuator):
+            theta = 2.0 * math.pi * actuator / n_actuator
+            direction = (math.cos(theta), math.sin(theta))
+            acc_scale = fd_eps * switches[actuator]
+            switch_scale = abs(acc[actuator]) if switches[actuator] <= 0.5 else abs(acc[actuator] - fd_eps)
+            effects.append((acc_scale * direction[0], acc_scale * direction[1]))
+            effects.append((switch_scale * direction[0], switch_scale * direction[1]))
+            function_calls += 4
+        for i in range(n_modes):
+            for j in range(i + 1, n_modes):
+                aligned = abs(effects[i][0] * effects[j][0] + effects[i][1] * effects[j][1])
+                extra[i][j] += aligned
+                extra[j][i] += aligned
+
+    extra = _normalize_extra_coupling(extra, target_mean=1.0)
+    out = [[float(base[i][j]) + extra[i][j] for j in range(n_modes)] for i in range(n_modes)]
+    return out, {
+        "construction_method": "lite_fd5_hardmove_action_effect_proxy",
+        "trajectory_count": samples,
+        "fd_eps": fd_eps,
+        "sensitivity_function_calls": function_calls,
+        "construction_fallback": "",
+    }
+
+
+def lite_first_order_sensitivity_coupling(base: Matrix, n_actuator: int) -> tuple[Matrix, dict]:
+    """Analytic first-order HardMove action-effect proxy for prestudy ordering."""
+    import math
+
+    n_modes = 2 * n_actuator
+    extra = [[0.0 for _ in range(n_modes)] for _ in range(n_modes)]
+    effects: list[tuple[float, float]] = []
+    for actuator in range(n_actuator):
+        theta = 2.0 * math.pi * actuator / n_actuator
+        direction = (math.cos(theta), math.sin(theta))
+        effects.append((0.5 * direction[0], 0.5 * direction[1]))
+        effects.append((0.125 * direction[0], 0.125 * direction[1]))
+    for i in range(n_modes):
+        for j in range(i + 1, n_modes):
+            aligned = abs(effects[i][0] * effects[j][0] + effects[i][1] * effects[j][1])
+            extra[i][j] = aligned
+            extra[j][i] = aligned
+    extra = _normalize_extra_coupling(extra, target_mean=1.0)
+    out = [[float(base[i][j]) + extra[i][j] for j in range(n_modes)] for i in range(n_modes)]
+    return out, {
+        "construction_method": "analytic_first_order_hardmove_action_effect_proxy",
+        "trajectory_count": 0,
+        "fd_eps": 0.0,
+        "sensitivity_function_calls": 0,
+        "construction_fallback": "autograd_not_required_for_hardmove_closed_form",
+    }
+
+
 def build_hardmove_orders(
     n_actuator: int,
     random_seed: int = 42,
@@ -499,6 +620,56 @@ def build_hardmove_orders(
         for i in range(len(coupling))
     ]
     candidates["hybrid_pam"] = block_preserving_order(n_actuator, hybrid_coupling, allow_internal_flip=True)
+    lite_fd5_coupling, lite_fd5_metadata = lite_fd5_sensitivity_coupling(coupling, n_actuator)
+    lite_first_order_coupling, lite_first_order_metadata = lite_first_order_sensitivity_coupling(
+        coupling, n_actuator
+    )
+    candidates["sensitivity_lite_fd5"] = block_preserving_order(
+        n_actuator, lite_fd5_coupling, allow_internal_flip=True
+    )
+    candidates["sensitivity_lite_first_order"] = block_preserving_order(
+        n_actuator, lite_first_order_coupling, allow_internal_flip=True
+    )
+    candidates["hybrid_block_only"] = local_pair_order(n_actuator)
+    candidates["hybrid_block_plus_physics"] = candidates["block_pam"]
+    candidates["hybrid_block_plus_sensitivity"] = candidates["sensitivity_pam"]
+    candidates["hybrid_current"] = candidates["hybrid_pam"]
+
+    prestudy_metadata = {
+        "sensitivity_pam": {
+            "construction_method": "deterministic_angular_distance_proxy",
+            "trajectory_count": 0,
+            "sensitivity_function_calls": 0,
+            "construction_fallback": "",
+        },
+        "hybrid_pam": {
+            "construction_method": "hybrid_physics_plus_deterministic_sensitivity",
+            "hybrid_physics_weight": 0.5,
+            "hybrid_sensitivity_weight": 0.5,
+        },
+        "sensitivity_lite_fd5": lite_fd5_metadata,
+        "sensitivity_lite_first_order": lite_first_order_metadata,
+        "hybrid_block_only": {
+            "construction_method": "block_constraint_only_zero_objective_local_tiebreak",
+            "hybrid_physics_weight": 0.0,
+            "hybrid_sensitivity_weight": 0.0,
+        },
+        "hybrid_block_plus_physics": {
+            "construction_method": "hybrid_ablation_physics_only",
+            "hybrid_physics_weight": 1.0,
+            "hybrid_sensitivity_weight": 0.0,
+        },
+        "hybrid_block_plus_sensitivity": {
+            "construction_method": "hybrid_ablation_sensitivity_only",
+            "hybrid_physics_weight": 0.0,
+            "hybrid_sensitivity_weight": 1.0,
+        },
+        "hybrid_current": {
+            "construction_method": "hybrid_ablation_current_0p5_physics_0p5_sensitivity",
+            "hybrid_physics_weight": 0.5,
+            "hybrid_sensitivity_weight": 0.5,
+        },
+    }
 
     results: dict[str, OrderingResult] = {}
     for name, order in candidates.items():
@@ -529,6 +700,7 @@ def build_hardmove_orders(
                     abs(order.index(2 * i) - order.index(2 * i + 1)) == 1
                     for i in range(n_actuator)
                 ),
+                **prestudy_metadata.get(name, {}),
             },
         )
     return coupling, results

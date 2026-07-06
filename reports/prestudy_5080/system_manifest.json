@@ -1,0 +1,15 @@
+{
+  "timestamp_utc": "2026-07-06T12:26:39Z",
+  "python": "3.9.6 (default, Apr 30 2025, 02:07:17) \n[Clang 17.0.0 (clang-1700.0.13.5)]",
+  "platform": "macOS-26.2-arm64-arm-64bit",
+  "os": "posix",
+  "git_commit": "5343b4169fea5a80b325170ed6f3a16e61c4156e",
+  "git_branch": "repro/hardmove-5080",
+  "git_dirty_short": "M .DS_Store\n M repro/diagnostics.py\n M repro/pam_ordering.py\n M repro/scripts/run_hardmove.py\n M repro/scripts/run_pam_ablation.py\n M test/test_pam_manifest.py\n M test/test_pam_ordering.py\n?? analysis/\n?? reports/\n?? repro/experiments/prestudy_5080_hybrid_ablation_manifest.json\n?? repro/experiments/prestudy_5080_sensitivity_lite_manifest.json\n?? repro/experiments/prestudy_5080_smoke_manifest.json\n?? scripts/\n?? test/test_prestudy_analysis.py",
+  "nvidia_smi": "unavailable: nvidia-smi not found",
+  "torch_version": null,
+  "torch_cuda": null,
+  "cuda_available": false,
+  "gpu_available": false,
+  "torch_error": "ModuleNotFoundError: No module named 'torch'"
+}

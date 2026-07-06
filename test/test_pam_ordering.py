@@ -33,6 +33,12 @@ class PamOrderingTests(unittest.TestCase):
             "opposite_pair",
             "block_pam",
             "sensitivity_pam",
+            "sensitivity_lite_fd5",
+            "sensitivity_lite_first_order",
+            "hybrid_block_only",
+            "hybrid_block_plus_physics",
+            "hybrid_block_plus_sensitivity",
+            "hybrid_current",
             "rankaware_proxy_pam",
             "hybrid_pam",
         ]:
@@ -79,6 +85,20 @@ class PamOrderingTests(unittest.TestCase):
         result = orders["peakcut_pam"]
         self.assertEqual(result.metadata["baseline_category"], "surrogate_baseline")
         self.assertAlmostEqual(result.metadata["peak_cut_objective"], peak_cut_cost(result.order, coupling))
+
+    def test_prestudy_ordering_metadata_documents_construction(self):
+        _, orders = build_hardmove_orders(n_actuator=8, random_seed=1)
+        self.assertEqual(orders["sensitivity_pam"].metadata["trajectory_count"], 0)
+        self.assertEqual(orders["sensitivity_lite_fd5"].metadata["trajectory_count"], 5)
+        self.assertGreater(orders["sensitivity_lite_fd5"].metadata["sensitivity_function_calls"], 0)
+        self.assertEqual(
+            orders["sensitivity_lite_first_order"].metadata["construction_fallback"],
+            "autograd_not_required_for_hardmove_closed_form",
+        )
+        self.assertEqual(orders["hybrid_current"].metadata["hybrid_physics_weight"], 0.5)
+        self.assertEqual(orders["hybrid_current"].order, orders["hybrid_pam"].order)
+        self.assertEqual(orders["hybrid_block_plus_physics"].order, orders["block_pam"].order)
+        self.assertEqual(orders["hybrid_block_plus_sensitivity"].order, orders["sensitivity_pam"].order)
 
 
 if __name__ == "__main__":

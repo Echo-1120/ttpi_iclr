@@ -1,0 +1,3 @@
+HM12 success
+
+Cannot draw success_rate; matplotlib is not installed.

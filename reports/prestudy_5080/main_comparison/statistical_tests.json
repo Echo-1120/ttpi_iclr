@@ -1,0 +1,528 @@
+{
+  "HM8": {
+    "peak_memory_mb": {
+      "env": "HM8",
+      "metric": "peak_memory_mb",
+      "baseline": "block_pam",
+      "paired_seed_count": 10,
+      "comparisons": {
+        "local_minus_block_pam": {
+          "seed_count": 10,
+          "mean_diff": 266.43169280000006,
+          "median_diff": 0.5227520000000823,
+          "bootstrap95_mean_diff": [
+            -75.80103680000006,
+            737.0319872000002
+          ],
+          "paired_permutation_p": 0.28515625,
+          "mode": "paired_permutation",
+          "holm_p": 1.0
+        },
+        "sensitivity_pam_minus_block_pam": {
+          "seed_count": 10,
+          "mean_diff": 57.34727680000003,
+          "median_diff": 0.5785599999999249,
+          "bootstrap95_mean_diff": [
+            -209.4127615999999,
+            304.1186304000001
+          ],
+          "paired_permutation_p": 0.60546875,
+          "mode": "paired_permutation",
+          "holm_p": 1.0
+        },
+        "hybrid_pam_minus_block_pam": {
+          "seed_count": 10,
+          "mean_diff": 214.00540160000008,
+          "median_diff": -0.03916799999979048,
+          "bootstrap95_mean_diff": [
+            -340.82437119999986,
+            795.715584
+          ],
+          "paired_permutation_p": 0.546875,
+          "mode": "paired_permutation",
+          "holm_p": 1.0
+        },
+        "rankaware_proxy_pam_minus_block_pam": {
+          "seed_count": 10,
+          "mean_diff": 2472.4281344,
+          "median_diff": 2253.3383680000006,
+          "bootstrap95_mean_diff": [
+            1912.1328128,
+            3063.1247872000004
+          ],
+          "paired_permutation_p": 0.001953125,
+          "mode": "paired_permutation",
+          "holm_p": 1.0
+        }
+      }
+    },
+    "adv_rank_auc": {
+      "env": "HM8",
+      "metric": "adv_rank_auc",
+      "baseline": "block_pam",
+      "paired_seed_count": 10,
+      "comparisons": {
+        "local_minus_block_pam": {
+          "seed_count": 10,
+          "mean_diff": 1.55,
+          "median_diff": 1.25,
+          "bootstrap95_mean_diff": [
+            0.65,
+            2.5
+          ],
+          "paired_permutation_p": 0.01953125,
+          "mode": "paired_permutation",
+          "holm_p": 0.6875
+        },
+        "sensitivity_pam_minus_block_pam": {
+          "seed_count": 10,
+          "mean_diff": -0.45,
+          "median_diff": 0.5,
+          "bootstrap95_mean_diff": [
+            -2.0,
+            1.1
+          ],
+          "paired_permutation_p": 0.6328125,
+          "mode": "paired_permutation",
+          "holm_p": 0.6875
+        },
+        "hybrid_pam_minus_block_pam": {
+          "seed_count": 10,
+          "mean_diff": -1.15,
+          "median_diff": -1.0,
+          "bootstrap95_mean_diff": [
+            -2.6,
+            0.1
+          ],
+          "paired_permutation_p": 0.171875,
+          "mode": "paired_permutation",
+          "holm_p": 0.6875
+        },
+        "rankaware_proxy_pam_minus_block_pam": {
+          "seed_count": 10,
+          "mean_diff": 54.15,
+          "median_diff": 52.75,
+          "bootstrap95_mean_diff": [
+            47.9,
+            60.55
+          ],
+          "paired_permutation_p": 0.001953125,
+          "mode": "paired_permutation",
+          "holm_p": 0.6875
+        }
+      }
+    },
+    "queried_points_total": {
+      "env": "HM8",
+      "metric": "queried_points_total",
+      "baseline": "block_pam",
+      "paired_seed_count": 10,
+      "comparisons": {
+        "local_minus_block_pam": {
+          "seed_count": 10,
+          "mean_diff": 2267000.0,
+          "median_diff": 1925742.0,
+          "bootstrap95_mean_diff": [
+            250970.4,
+            4539648.8
+          ],
+          "paired_permutation_p": 0.0546875,
+          "mode": "paired_permutation",
+          "holm_p": 1.0
+        },
+        "sensitivity_pam_minus_block_pam": {
+          "seed_count": 10,
+          "mean_diff": 934429.6,
+          "median_diff": 1648611.0,
+          "bootstrap95_mean_diff": [
+            -715754.0,
+            2485445.0
+          ],
+          "paired_permutation_p": 0.3125,
+          "mode": "paired_permutation",
+          "holm_p": 1.0
+        },
+        "hybrid_pam_minus_block_pam": {
+          "seed_count": 10,
+          "mean_diff": 559432.4,
+          "median_diff": 337652.0,
+          "bootstrap95_mean_diff": [
+            -975102.0,
+            2278529.2
+          ],
+          "paired_permutation_p": 0.572265625,
+          "mode": "paired_permutation",
+          "holm_p": 1.0
+        },
+        "rankaware_proxy_pam_minus_block_pam": {
+          "seed_count": 10,
+          "mean_diff": 17901181.6,
+          "median_diff": 17906558.0,
+          "bootstrap95_mean_diff": [
+            14557767.2,
+            21027598.4
+          ],
+          "paired_permutation_p": 0.001953125,
+          "mode": "paired_permutation",
+          "holm_p": 1.0
+        }
+      }
+    },
+    "success_rate": {
+      "env": "HM8",
+      "metric": "success_rate",
+      "baseline": "block_pam",
+      "paired_seed_count": 10,
+      "comparisons": {
+        "local_minus_block_pam": {
+          "seed_count": 10,
+          "mean_diff": -0.10700000000000001,
+          "median_diff": -0.19000000000000003,
+          "bootstrap95_mean_diff": [
+            -0.222,
+            0.01799999999999998
+          ],
+          "paired_permutation_p": 0.12890625,
+          "mode": "paired_permutation",
+          "holm_p": 1.0
+        },
+        "sensitivity_pam_minus_block_pam": {
+          "seed_count": 10,
+          "mean_diff": 0.053000000000000005,
+          "median_diff": 0.14,
+          "bootstrap95_mean_diff": [
+            -0.07699999999999999,
+            0.16399999999999998
+          ],
+          "paired_permutation_p": 0.431640625,
+          "mode": "paired_permutation",
+          "holm_p": 1.0
+        },
+        "hybrid_pam_minus_block_pam": {
+          "seed_count": 10,
+          "mean_diff": -0.012000000000000005,
+          "median_diff": -0.04999999999999999,
+          "bootstrap95_mean_diff": [
+            -0.165,
+            0.13499999999999998
+          ],
+          "paired_permutation_p": 0.890625,
+          "mode": "paired_permutation",
+          "holm_p": 1.0
+        },
+        "rankaware_proxy_pam_minus_block_pam": {
+          "seed_count": 10,
+          "mean_diff": -0.13,
+          "median_diff": -0.14,
+          "bootstrap95_mean_diff": [
+            -0.275,
+            0.01499999999999999
+          ],
+          "paired_permutation_p": 0.115234375,
+          "mode": "paired_permutation",
+          "holm_p": 1.0
+        }
+      }
+    },
+    "oom_rate": [
+      {
+        "env": "HM8",
+        "ordering": "local",
+        "runs": 10,
+        "oom_runs": 0,
+        "oom_rate": 0.0
+      },
+      {
+        "env": "HM8",
+        "ordering": "block_pam",
+        "runs": 10,
+        "oom_runs": 0,
+        "oom_rate": 0.0
+      },
+      {
+        "env": "HM8",
+        "ordering": "sensitivity_pam",
+        "runs": 10,
+        "oom_runs": 0,
+        "oom_rate": 0.0
+      },
+      {
+        "env": "HM8",
+        "ordering": "hybrid_pam",
+        "runs": 10,
+        "oom_runs": 0,
+        "oom_rate": 0.0
+      },
+      {
+        "env": "HM8",
+        "ordering": "rankaware_proxy_pam",
+        "runs": 10,
+        "oom_runs": 0,
+        "oom_rate": 0.0
+      }
+    ]
+  },
+  "HM12": {
+    "peak_memory_mb": {
+      "env": "HM12",
+      "metric": "peak_memory_mb",
+      "baseline": "block_pam",
+      "paired_seed_count": 10,
+      "comparisons": {
+        "local_minus_block_pam": {
+          "seed_count": 10,
+          "mean_diff": -616.795648,
+          "median_diff": 0.35276799999974173,
+          "bootstrap95_mean_diff": [
+            -1872.9408511999995,
+            756.1416192000002
+          ],
+          "paired_permutation_p": 0.375,
+          "mode": "paired_permutation",
+          "holm_p": 1.0
+        },
+        "sensitivity_pam_minus_block_pam": {
+          "seed_count": 10,
+          "mean_diff": -1809.7626111999998,
+          "median_diff": -2448.132352,
+          "bootstrap95_mean_diff": [
+            -3162.2000639999997,
+            -245.06920959999962
+          ],
+          "paired_permutation_p": 0.06640625,
+          "mode": "paired_permutation",
+          "holm_p": 1.0
+        },
+        "hybrid_pam_minus_block_pam": {
+          "seed_count": 10,
+          "mean_diff": -63.03564800000004,
+          "median_diff": 0.6387199999999211,
+          "bootstrap95_mean_diff": [
+            -1659.9707136000004,
+            1469.988608
+          ],
+          "paired_permutation_p": 0.974609375,
+          "mode": "paired_permutation",
+          "holm_p": 1.0
+        },
+        "rankaware_proxy_pam_minus_block_pam": {
+          "seed_count": 10,
+          "mean_diff": -372.23275520000004,
+          "median_diff": -0.13132799999948475,
+          "bootstrap95_mean_diff": [
+            -1937.313843200001,
+            1097.0843135999999
+          ],
+          "paired_permutation_p": 0.6796875,
+          "mode": "paired_permutation",
+          "holm_p": 1.0
+        }
+      }
+    },
+    "adv_rank_auc": {
+      "env": "HM12",
+      "metric": "adv_rank_auc",
+      "baseline": "block_pam",
+      "paired_seed_count": 10,
+      "comparisons": {
+        "local_minus_block_pam": {
+          "seed_count": 10,
+          "mean_diff": 5.1,
+          "median_diff": 0.5,
+          "bootstrap95_mean_diff": [
+            -6.4,
+            17.2
+          ],
+          "paired_permutation_p": 0.443359375,
+          "mode": "paired_permutation",
+          "holm_p": 1.0
+        },
+        "sensitivity_pam_minus_block_pam": {
+          "seed_count": 10,
+          "mean_diff": -1.9,
+          "median_diff": 0.5,
+          "bootstrap95_mean_diff": [
+            -12.65,
+            8.85
+          ],
+          "paired_permutation_p": 0.74609375,
+          "mode": "paired_permutation",
+          "holm_p": 1.0
+        },
+        "hybrid_pam_minus_block_pam": {
+          "seed_count": 10,
+          "mean_diff": -6.2,
+          "median_diff": 2.25,
+          "bootstrap95_mean_diff": [
+            -22.45,
+            9.45
+          ],
+          "paired_permutation_p": 0.5078125,
+          "mode": "paired_permutation",
+          "holm_p": 1.0
+        },
+        "rankaware_proxy_pam_minus_block_pam": {
+          "seed_count": 10,
+          "mean_diff": -111.6,
+          "median_diff": -110.5,
+          "bootstrap95_mean_diff": [
+            -123.3,
+            -100.25
+          ],
+          "paired_permutation_p": 0.001953125,
+          "mode": "paired_permutation",
+          "holm_p": 1.0
+        }
+      }
+    },
+    "queried_points_total": {
+      "env": "HM12",
+      "metric": "queried_points_total",
+      "baseline": "block_pam",
+      "paired_seed_count": 10,
+      "comparisons": {
+        "local_minus_block_pam": {
+          "seed_count": 10,
+          "mean_diff": 5023387.8,
+          "median_diff": 11888862.0,
+          "bootstrap95_mean_diff": [
+            -18929761.8,
+            23316770.0
+          ],
+          "paired_permutation_p": 0.669921875,
+          "mode": "paired_permutation",
+          "holm_p": 1.0
+        },
+        "sensitivity_pam_minus_block_pam": {
+          "seed_count": 10,
+          "mean_diff": -36728914.6,
+          "median_diff": -42584345.0,
+          "bootstrap95_mean_diff": [
+            -53596877.0,
+            -20794067.2
+          ],
+          "paired_permutation_p": 0.0078125,
+          "mode": "paired_permutation",
+          "holm_p": 1.0
+        },
+        "hybrid_pam_minus_block_pam": {
+          "seed_count": 10,
+          "mean_diff": 5032786.4,
+          "median_diff": -12352218.0,
+          "bootstrap95_mean_diff": [
+            -22083080.6,
+            35639247.2
+          ],
+          "paired_permutation_p": 0.75390625,
+          "mode": "paired_permutation",
+          "holm_p": 1.0
+        },
+        "rankaware_proxy_pam_minus_block_pam": {
+          "seed_count": 10,
+          "mean_diff": -107963851.6,
+          "median_diff": -112119660.0,
+          "bootstrap95_mean_diff": [
+            -132223846.0,
+            -84732472.2
+          ],
+          "paired_permutation_p": 0.001953125,
+          "mode": "paired_permutation",
+          "holm_p": 1.0
+        }
+      }
+    },
+    "success_rate": {
+      "env": "HM12",
+      "metric": "success_rate",
+      "baseline": "block_pam",
+      "paired_seed_count": 6,
+      "comparisons": {
+        "local_minus_block_pam": {
+          "seed_count": 5,
+          "mean_diff": -0.06200000000000001,
+          "median_diff": 0.030000000000000027,
+          "bootstrap95_mean_diff": [
+            -0.23600000000000002,
+            0.07799999999999999
+          ],
+          "paired_permutation_p": 0.625,
+          "mode": "paired_permutation",
+          "holm_p": 1.0
+        },
+        "sensitivity_pam_minus_block_pam": {
+          "seed_count": 5,
+          "mean_diff": -0.144,
+          "median_diff": -0.18,
+          "bootstrap95_mean_diff": [
+            -0.208,
+            -0.06799999999999999
+          ],
+          "paired_permutation_p": 0.0625,
+          "mode": "paired_permutation",
+          "holm_p": 1.0
+        },
+        "hybrid_pam_minus_block_pam": {
+          "seed_count": 3,
+          "mean_diff": 0.04,
+          "median_diff": -0.09999999999999998,
+          "bootstrap95_mean_diff": [
+            -0.13,
+            0.35
+          ],
+          "paired_permutation_p": 1.0,
+          "mode": "paired_permutation",
+          "holm_p": 1.0
+        },
+        "rankaware_proxy_pam_minus_block_pam": {
+          "seed_count": 0,
+          "mean_diff": null,
+          "median_diff": null,
+          "bootstrap95_mean_diff": [
+            null,
+            null
+          ],
+          "paired_permutation_p": null,
+          "mode": "descriptive_only",
+          "holm_p": null
+        }
+      }
+    },
+    "oom_rate": [
+      {
+        "env": "HM12",
+        "ordering": "local",
+        "runs": 10,
+        "oom_runs": 3,
+        "oom_rate": 0.3
+      },
+      {
+        "env": "HM12",
+        "ordering": "block_pam",
+        "runs": 10,
+        "oom_runs": 4,
+        "oom_rate": 0.4
+      },
+      {
+        "env": "HM12",
+        "ordering": "sensitivity_pam",
+        "runs": 10,
+        "oom_runs": 1,
+        "oom_rate": 0.1
+      },
+      {
+        "env": "HM12",
+        "ordering": "hybrid_pam",
+        "runs": 10,
+        "oom_runs": 7,
+        "oom_rate": 0.7
+      },
+      {
+        "env": "HM12",
+        "ordering": "rankaware_proxy_pam",
+        "runs": 10,
+        "oom_runs": 10,
+        "oom_rate": 1.0
+      }
+    ]
+  }
+}

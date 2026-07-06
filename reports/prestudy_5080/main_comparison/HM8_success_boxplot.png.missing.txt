@@ -1,0 +1,3 @@
+HM8 success
+
+Cannot draw success_rate; matplotlib is not installed.

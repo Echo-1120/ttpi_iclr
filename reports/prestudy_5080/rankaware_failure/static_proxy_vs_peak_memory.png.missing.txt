@@ -1,0 +1,3 @@
+Static proxy vs peak memory
+
+Cannot draw pam_order_rankaware_proxy_objective vs peak_memory_mb; matplotlib is not installed.

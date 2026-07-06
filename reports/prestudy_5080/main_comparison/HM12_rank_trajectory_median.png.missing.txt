@@ -1,0 +1,3 @@
+HM12 rank trajectory
+
+Cannot draw rank trajectory; matplotlib is not installed.

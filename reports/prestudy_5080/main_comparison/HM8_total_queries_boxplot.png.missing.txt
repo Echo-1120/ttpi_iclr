@@ -1,0 +1,3 @@
+HM8 total TT-Cross queries
+
+Cannot draw queried_points_total; matplotlib is not installed.

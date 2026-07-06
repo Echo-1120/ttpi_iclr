@@ -1,0 +1,7 @@
+env,x,y,pearson,n
+HM8,pam_order_rankaware_proxy_objective,peak_memory_mb,-0.1522492426878272,50
+HM8,pam_order_rankaware_proxy_objective,adv_rank_auc,-0.2092535649150459,50
+HM8,pam_order_rankaware_proxy_objective,queried_points_total,-0.13727005347308893,50
+HM12,pam_order_rankaware_proxy_objective,peak_memory_mb,-0.012649775400825174,50
+HM12,pam_order_rankaware_proxy_objective,adv_rank_auc,0.29363945519009427,50
+HM12,pam_order_rankaware_proxy_objective,queried_points_total,0.31698790952145817,50

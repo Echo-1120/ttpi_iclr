@@ -80,6 +80,14 @@ class PamManifestTests(unittest.TestCase):
         self.assertTrue(all(item["permutation_seed"] == 0 for item in non_random_items))
         self.assertTrue(all("formal5080" in item["result"] for item in commands))
 
+    def test_prestudy_manifest_uses_isolated_output_root(self):
+        manifest = json.loads((ROOT / "repro" / "experiments" / "prestudy_5080_sensitivity_lite_manifest.json").read_text())
+        commands = build_run_commands(manifest)
+        self.assertEqual(len(commands), 6)
+        self.assertEqual({item["ordering"] for item in commands}, {"sensitivity_lite_fd5", "sensitivity_lite_first_order"})
+        self.assertTrue(all("/results/prestudy_5080/sensitivity_lite/results/" in item["result"] for item in commands))
+        self.assertTrue(all("--output-root results/prestudy_5080/sensitivity_lite/results" in " ".join(item["cmd"]) for item in commands))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,0 +1,28 @@
+# TTPI 动作模式排序预实验与高显存服务器需求
+
+## Research Question
+本预实验检验动作 mode ordering 是否能稳定降低 TTPI 的 TT-rank、显存与 TT-Cross 查询负担，并确认 RTX 5080 是否足以支撑正式 HM12/HM16 消融。
+
+## RTX 5080 Findings
+| env | ordering | runs | ok_runs | oom_runs | peak_memory_mb_mean | adv_rank_auc_mean | queried_points_total_mean | success_rate_mean |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| HM12 | block_pam | 10 | 6 | 4 | 11286.3303168 | 184.95 | 185532768.2 | 0.5683333333333334 |
+| HM12 | hybrid_pam | 10 | 3 | 7 | 11223.2946688 | 178.75 | 190565554.6 | 0.5566666666666666 |
+| HM12 | sensitivity_pam | 10 | 9 | 1 | 9476.5677056 | 183.05 | 148803853.6 | 0.4811111111111111 |
+| HM8 | block_pam | 10 | 10 | 0 | 2539.7644288 | 136.2 | 27254724.4 | 0.664 |
+| HM8 | hybrid_pam | 10 | 10 | 0 | 2753.7698304 | 135.05 | 27814156.8 | 0.652 |
+| HM8 | sensitivity_pam | 10 | 10 | 0 | 2597.1117056 | 135.75 | 28189154 | 0.717 |
+
+HM16 当前 formal 配置下 OOM/total = 150/150，因此 5080 不适合作为 HM16 全量正式实验平台。
+
+## Rankaware Proxy Mismatch
+`rankaware_proxy_pam` 目前只优化静态 cut-load proxy。已有日志允许比较 proxy、真实 rank-AUC、显存和 query；详细机制见 `rankaware_failure/rankaware_failure_analysis.md`。
+
+## Hardware Bottleneck
+瓶颈不是单纯训练时间，而是 TT-Cross 动态 rank burst 带来的显存峰值和 OOM。OOM 记录被保留为服务器申请证据。
+
+## Server Plan
+先在 5080 上只补 HM8 seed 0-2 的 `sensitivity_lite_*` 和 `hybrid_*` objective-toggle 预实验；HM12/HM16 全量实验等待更高显存服务器确认后再启动。
+
+## Resource Request
+服务器申请应基于当前 `peak_memory_mb`、OOM rate、rank-AUC 和 query 证据，不伪造服务器型号。建议申请显存显著高于 5080 的 GPU，并优先完成 HM12/HM16 多 seed 正式消融。

@@ -47,7 +47,14 @@ def result_path(
         f"{perm_suffix}"
         f"{tag_suffix}"
     )
-    return ROOT / "repro" / "results" / f"{task}.json"
+    output_root = defaults.get("output_root")
+    if output_root:
+        base = Path(output_root)
+        if not base.is_absolute():
+            base = ROOT / base
+    else:
+        base = ROOT / "repro" / "results"
+    return base / f"{task}.json"
 
 
 def build_run_commands(manifest: dict, *, smoke: bool = False) -> list[dict]:

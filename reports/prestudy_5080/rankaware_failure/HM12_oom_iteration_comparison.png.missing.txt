@@ -1,0 +1,3 @@
+HM12 last completed PI before stop/OOM
+
+Cannot draw last_completed_pi; matplotlib is not installed.

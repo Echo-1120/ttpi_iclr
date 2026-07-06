@@ -238,6 +238,10 @@ def main():
     parser.add_argument("--target-radius", type=float, default=0.02)
     parser.add_argument("--run-tag", type=str, default="")
     parser.add_argument("--include-permutation-seed-in-run-id", action="store_true")
+    parser.add_argument("--output-root", type=Path, default=None)
+    parser.add_argument("--diagnostics-root", type=Path, default=None)
+    parser.add_argument("--figure-root", type=Path, default=None)
+    parser.add_argument("--model-root", type=Path, default=None)
 
     parser.add_argument("--max-batch-v", type=int, default=10000)
     parser.add_argument("--max-batch-a", type=int, default=100000)
@@ -301,8 +305,12 @@ def main():
     device = torch.device(args.device)
     seed_everything(training_seed)
 
-    out_dir = ROOT / "repro" / "results"
-    model_dir = ROOT / "repro" / "models"
+    out_dir = args.output_root if args.output_root is not None else ROOT / "repro" / "results"
+    diagnostics_dir = (
+        args.diagnostics_root if args.diagnostics_root is not None else ROOT / "repro" / "diagnostics"
+    )
+    fig_dir = args.figure_root if args.figure_root is not None else ROOT / "repro" / "figures" / "hardmove"
+    model_dir = args.model_root if args.model_root is not None else ROOT / "repro" / "models"
     out_dir.mkdir(parents=True, exist_ok=True)
     model_dir.mkdir(parents=True, exist_ok=True)
 
@@ -586,7 +594,6 @@ def main():
             "callback": best_to_entry.get("callback_count", -1),
         }
 
-    fig_dir = ROOT / "repro" / "figures" / "hardmove"
     fig_path = fig_dir / f"{task_name}_traj.png"
 
     traj_fig = None
@@ -710,7 +717,6 @@ def main():
     with open(out_file, "w", encoding="utf-8") as f:
         json.dump(tensor_safe(result), f, indent=2, ensure_ascii=False)
 
-    diagnostics_dir = ROOT / "repro" / "diagnostics"
     rank_rows = rank_profile_rows(
         task_name=task_name,
         seed=args.seed,

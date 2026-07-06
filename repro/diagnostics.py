@@ -64,6 +64,12 @@ ORDERING_GROUPS = {
     "rankaware_proxy_pam": "main_method",
     "rankaware_spectral_pam": "ablation",
     "hybrid_pam": "main_method",
+    "sensitivity_lite_fd5": "prestudy_candidate",
+    "sensitivity_lite_first_order": "prestudy_candidate",
+    "hybrid_block_only": "prestudy_ablation",
+    "hybrid_block_plus_physics": "prestudy_ablation",
+    "hybrid_block_plus_sensitivity": "prestudy_ablation",
+    "hybrid_current": "prestudy_ablation",
 }
 
 
