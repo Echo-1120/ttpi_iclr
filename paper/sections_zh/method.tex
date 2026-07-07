@@ -1,7 +1,7 @@
 \section{方法}
 
 我们将物理感知模态重排序（physics-aware mode reordering, PAM）定义为 HardMove 动作模态上的一族置换。基线物理布局为
-\([\texttt{acc}_0,\texttt{sw}_0,\texttt{acc}_1,\texttt{sw}_1,\ldots]\)。本文重点研究更强的分块保留 PAM：每个混合执行器对 \(B_i=[\texttt{acc}_i,\texttt{sw}_i]\) 被视为一个原子 block；算法根据两两耦合分数构建加权 block graph，用谱初始化给出 block 顺序，并通过 2-opt 局部搜索进一步优化。可选的 block 内翻转只在执行器配对仍保持相邻时允许。
+\([\texttt{acc}_0,\texttt{sw}_0,\texttt{acc}_1,\texttt{sw}_1,\ldots]\)。当前预实验最支持的主方法是分块保留的耦合感知 PAM：每个混合执行器对 \(B_i=[\texttt{acc}_i,\texttt{sw}_i]\) 被视为一个原子 block；算法根据确定性的结构耦合分数构建加权 block graph，用谱初始化给出 block 顺序，并通过 2-opt 局部搜索进一步优化。仓库中该方法名为 \texttt{sensitivity\_pam}；但当前分数是结构/角距离 coupling proxy，而不是经验轨迹敏感度估计器。可选的 block 内翻转只在执行器配对仍保持相邻时允许。
 
 对排序 \(\pi\)，令 \(\delta_\pi(k)\) 表示跨越 cut \(k\) 的边，并定义加权 cut 负担
 \begin{equation}
@@ -22,4 +22,4 @@ J_{\mathrm{rank}}(\pi) =
 {}+\lambda_{\mathrm{peak}}\max_k \log(1 + r_k(\pi)),
 \end{aligned}
 \end{equation}
-其中 \(r_k(\pi)\) 可由缓存奇异谱估计，也可由 cut profile 派生的 segment-coupling proxy 估计。仓库在同一个 manifest-driven runner 下比较 local、random、bad-split、opposite-pair、greedy PAM、spectral PAM、block-preserving PAM、free PAM、sensitivity-weighted PAM、rank-aware PAM 和 hybrid 目标。
+其中 \(r_k(\pi)\) 可由缓存奇异谱估计，也可由 cut profile 派生的 segment-coupling proxy 估计。在当前证据集中，这个静态 proxy 应作为诊断消融保留，而不是作为主方法，因为它不能可靠预测动态 TT-Cross 负担。仓库在同一个 manifest-driven runner 下比较 local、random、bad-split、opposite-pair、greedy PAM、spectral PAM、block-preserving PAM、free PAM、coupling-aware PAM、rank-aware-proxy PAM 和 hybrid 目标。

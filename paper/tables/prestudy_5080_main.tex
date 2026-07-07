@@ -1,0 +1,17 @@
+\begin{tabular}{llrrrrr}
+\toprule
+Env & Ordering & Runs & OOM & Peak MB & Queries M & Success \\
+\midrule
+HM8 & Local & 10 & 0 & 2806.2 & 29.52 & 0.557 \\
+HM8 & BlockPAM & 10 & 0 & 2539.8 & 27.25 & 0.664 \\
+HM8 & CouplingAwarePAM & 10 & 0 & 2597.1 & 28.19 & 0.717 \\
+HM8 & HybridPAM & 10 & 0 & 2753.8 & 27.81 & 0.652 \\
+HM8 & RankAwareProxy & 10 & 0 & 5012.2 & 45.16 & 0.534 \\
+\midrule
+HM12 & Local & 10 & 3 & 10669.5 & 190.56 & 0.471 \\
+HM12 & BlockPAM & 10 & 4 & 11286.3 & 185.53 & 0.568 \\
+HM12 & CouplingAwarePAM & 10 & 1 & 9476.6 & 148.80 & 0.481 \\
+HM12 & HybridPAM & 10 & 7 & 11223.3 & 190.57 & 0.557 \\
+HM12 & RankAwareProxy & 10 & 10 & 10914.1 & 77.57 & -- \\
+\bottomrule
+\end{tabular}

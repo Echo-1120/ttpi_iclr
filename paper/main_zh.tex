@@ -11,12 +11,12 @@
 \usepackage[UTF8]{ctex}
 \usepackage{hyperref}
 
-\graphicspath{{figures/}{../repro/figures/pam_diagnostics/}{../repro/figures/hardmove/}}
+\graphicspath{{figures/}{../repro/figures/pam_diagnostics/}{../repro/figures/hardmove/}{../reports/prestudy_5080/main_comparison/}{../reports/prestudy_5080/rankaware_failure/}}
 
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 
-\title{面向张量链策略迭代的秩感知、分块保留模态重排序}
+\title{张量链策略迭代中的模态排序：分块保留的耦合感知重排序}
 
 \author{\IEEEauthorblockN{匿名作者}
 \IEEEauthorblockA{\textit{匿名单位}\\
@@ -30,7 +30,7 @@ anonymous@example.com}}
 \maketitle
 
 \begin{abstract}
-张量链策略迭代（tensor-train policy iteration, TTPI）通过用低秩张量链替代完整状态--动作张量，使混合控制问题在离散空间中变得可处理。然而，TTPI 的计算代价仍然强烈依赖由序列张量展开诱导的 TT 秩。本文将动作模态排序作为 TTPI 中的显式算法变量研究。我们认为，物理相邻性是有用先验，但并不是充分的排序目标：加权线性排列度量的是累计 cut 负担，而峰值显存和 TT-Cross 工作量更接近由 cut-level 秩瓶颈决定。基于这一观察，本文构建面向混合执行器配对的分块保留与秩感知模态重排序目标，并配套记录 TT-Cross 查询请求、瞬时秩剖面、显存、运行时间和奇异谱 proxy 的诊断工具。当前仓库同步结果支持资源敏感性主张，并给出进一步提出控制性能主张所需的证据标准。
+张量链策略迭代（tensor-train policy iteration, TTPI）通过序列低秩分解表示高维混合状态--动作函数。虽然动作变量置换不改变底层联合动作空间，但它会改变 TT 展开矩阵，从而显著影响 TT-Cross 工作量、峰值显存和 OOM 行为。本文将动作模态排序作为 TTPI 中的一等算法变量研究，并提出一种确定性的分块保留耦合感知排序策略：连续动作变量与离散开关变量在每个执行器内保持相邻，而执行器 block 之间根据结构耦合重新排列。本文配套记录 TT-Cross 查询请求、瞬时 cut-rank 剖面、显存、运行时间、完成概率和完成运行条件下的控制性能。当前 RTX 5080 预实验结果表明，在 HardMove HM8/HM12 上，以 \texttt{sensitivity\_pam} 实现的耦合感知排序在已测试候选中具有最稳定的资源表现；相反，静态累计 rank proxy 与朴素 physics--sensitivity 混合目标不能可靠预测动态 TT-Cross 负担。
 \end{abstract}
 
 \begin{IEEEkeywords}

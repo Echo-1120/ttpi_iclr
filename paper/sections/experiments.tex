@@ -1,54 +1,143 @@
 \section{Experiments}
 
-All numbers in this section should be generated from repository artifacts using
-\path{repro/scripts/sync_paper_artifacts.py}.
+All numbers in this section are synchronized from repository artifacts under
+\path{reports/prestudy_5080/} and \path{results/prestudy_5080/}. The current
+evidence should be read as an RTX 5080 prestudy for feasibility and mechanism
+selection, not as the final full-scale benchmark.
 
-\subsection{Diagnostic Smoke Test}
+\subsection{RTX 5080 Prestudy Protocol}
 
-The current uploaded HardMove pilot should be interpreted as a diagnostic smoke
-test rather than as final learning evidence. It checks whether the logging stack
-can expose ordering-dependent resource behavior. In the available HM8 seed-0
-short runs, bad-split and random orderings increase peak memory relative to the
-local ordering, while the reward-side TT-Cross rank profile develops a larger
-middle-cut hump. At the same time, final value/advantage rank summaries are not
-yet separated across the four pilot orderings, and all pilot runs report zero
-success. Therefore the current evidence supports a resource-sensitivity claim,
-not a control-performance claim.
+We keep the TTPI numerical configuration fixed and change only the action-mode
+ordering. The formal HardMove runs use the state40/action50/iter30 setting with
+seeds 0--9. The prestudy analyzes HM8 and HM12 standard environments, keeps OOM
+runs as first-class outcomes, and records peak GPU memory, wall-clock time,
+TT-Cross function-evaluation requests, per-iteration rank profiles, and
+per-cut transient rank logs. HM16 at this configuration is not treated as a
+5080 benchmark because all 150 formal HM16 runs in the current artifact set end
+in OOM.
+
+\subsection{Main Resource Comparison}
+
+Table~\ref{tab:prestudy-5080-main} summarizes the existing HM8/HM12 formal
+runs. In the text below, CouplingAwarePAM refers to the deterministic
+block-preserving coupling-aware ordering implemented in the code as
+\texttt{sensitivity\_pam}. On HM8, all listed orderings complete.
+CouplingAwarePAM reaches the highest mean success rate (0.717) while keeping
+memory and query burden close to BlockPAM. In contrast, the static
+RankAwareProxy ordering has much larger memory (5012 MB) and query burden
+(45.16M requests), despite running without OOM on HM8.
+
+HM12 separates the methods more clearly. CouplingAwarePAM has the lowest OOM
+count (1/10), the lowest mean peak memory among the completed/partial runs
+(9477 MB), and the lowest mean TT-Cross request count (148.80M). Local and
+BlockPAM have 3/10 and 4/10 OOM, respectively. The current HybridPAM is less
+stable on HM12 with 7/10 OOM, and RankAwareProxy fails on every HM12 seed. The
+safe conclusion is therefore not that a rank-aware proxy is solved, but that the
+current deterministic coupling-aware block ordering is the strongest
+candidate among the implemented variants.
 
 \begin{table}[t]
 \centering
-\caption{HardMove TTPI ordering ablation. Memory and runtime are lower-is-better;
-success rate and \(\mu\) are higher-is-better.}
-\input{tables/pam_ablation_main}
-\label{tab:pam-main}
+\caption{RTX 5080 prestudy on HardMove. OOM counts include failed seeds; success
+is averaged over completed runs only. Queries are wrapper-counted TT-Cross
+function-evaluation requests.}
+\resizebox{\columnwidth}{!}{\input{tables/prestudy_5080_main}}
+\label{tab:prestudy-5080-main}
 \end{table}
 
-\input{tables/pam_diagnostics_summary}
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.48\linewidth]{HM8_peak_memory_boxplot.png}
+  \includegraphics[width=0.48\linewidth]{HM12_peak_memory_boxplot.png}
+  \caption{Peak GPU memory in the RTX 5080 prestudy. HM12 exposes the practical
+  memory gap between CouplingAwarePAM and the current hybrid/rank-aware proxy
+  variants.}
+  \label{fig:prestudy-peak-memory}
+\end{figure}
+
+Because HM12 contains OOM runs, completed-run success cannot be interpreted in
+isolation. Table~\ref{tab:prestudy-5080-operational} separates completion
+probability \(P_{\mathrm{complete}}\), conditional success among completed runs
+\(S_{\mathrm{cond}}\), and an OOM-as-failure operational success
+\(S_{\mathrm{e2e}}=P_{\mathrm{complete}}S_{\mathrm{cond}}\). Under this
+protocol, HybridPAM has a competitive conditional success rate only on the few
+seeds that complete, but its operational success drops to 0.167 because 7/10
+seeds OOM. CouplingAwarePAM has the best operational success in this prestudy
+(0.433), primarily because it completes 9/10 HM12 seeds.
+
+\begin{table}[t]
+\centering
+\caption{HM12 completion-aware performance. Conditional success is reported
+only over completed runs; operational success treats OOM as failure.}
+\resizebox{\columnwidth}{!}{\input{tables/prestudy_5080_operational}}
+\label{tab:prestudy-5080-operational}
+\end{table}
+
+\subsection{Why the Static Rank-Aware Proxy Fails}
+
+The implemented RankAwareProxy objective is a static segmented cut-load
+surrogate, not a dynamic singular-spectrum or TT-Cross rank estimator. The
+prestudy supports this distinction empirically: on HM8 it increases both peak
+memory and query requests, and on HM12 it produces 10/10 OOM runs. The
+proxy--actual correlations in the current artifact set are weak or inconsistent
+(for example, Pearson correlation with peak memory is \(-0.15\) on HM8 and
+\(-0.01\) on HM12). This supports treating RankAwareProxy as a failure
+mechanism ablation rather than as the main method. It does not show that
+rank-aware ordering is impossible in principle; it shows that the current static
+cumulative proxy is poorly aligned with the evolving bottleneck ranks observed
+during TTPI.
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=0.72\linewidth]{peak_memory_vs_ordering.png}
-  \caption{Peak memory by ordering. This figure is generated from
-  repository diagnostics and should be regenerated after each experiment round.}
-  \label{fig:peak-memory-ordering}
+  \includegraphics[width=0.48\linewidth]{static_proxy_vs_peak_memory.png}
+  \includegraphics[width=0.48\linewidth]{rankaware_cutwise_rank_heatmap.png}
+  \caption{Static proxy diagnostics. The current proxy does not reliably predict
+  peak memory, while cut-level ranks reveal bottlenecks that average objectives
+  can hide.}
+  \label{fig:rankaware-failure}
 \end{figure}
 
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=0.72\linewidth]{tt_actual_rank_profile_by_ordering.png}
-  \caption{Actual TT rank profile by ordering.}
-  \label{fig:actual-rank-profile}
-\end{figure}
+\subsection{Coupling and Hybrid Ablations}
 
-\subsection{Required Main Evidence}
+Because the current CouplingAwarePAM score is already a deterministic
+angular-distance coupling proxy, we tested two empirical action-effect variants
+only as prestudy candidates. Table~\ref{tab:prestudy-5080-lite} shows that both
+are too expensive on HM8: FD5 roughly doubles the TT-Cross request count
+relative to the current coupling-aware ordering, while the first-order variant
+raises memory and rank even more. We therefore do not extend either lite variant
+to HM12.
 
-The main experiment suite is organized around four ablation axes: objective
-choice (LA, peak-cut, rank-aware proxy, spectral cache), information source
-(physics-only, sensitivity-only, hybrid), structural constraint
-(block-preserving, free permutation, wrong split), and proxy precision
-(spectral cache, segment-coupling proxy, no rank proxy). The stress tests include
-original HardMove, index-permuted HardMove, and cross-coupled HardMove. The
-expected claim is not that one ordering dominates every metric, but that the
-singular-spectrum proxy, actual TT rank profile, and resource metrics explain
-when block-preserving rank-aware orderings reduce TTPI burden under fixed
-budgets.
+\begin{table}[t]
+\centering
+\caption{Low-cost empirical sensitivity candidates on HM8 seeds 0--2. Both
+candidates complete, but their rank, memory, and query burden are too high to
+justify HM12 expansion.}
+\resizebox{\columnwidth}{!}{\input{tables/prestudy_5080_lite}}
+\label{tab:prestudy-5080-lite}
+\end{table}
+
+The hybrid objective-toggle ablation in Table~\ref{tab:prestudy-5080-hybrid}
+shows that the sensitivity-only objective is stronger than the current
+50/50 hybrid on HM8 seeds 0--2. It has the lowest memory, runtime, query count,
+and the highest mean success rate among the four toggles. This explains why the
+current HybridPAM should be downgraded from a main method to an ablation until a
+better mixture rule is identified.
+
+\begin{table}[t]
+\centering
+\caption{Hybrid objective-toggle ablation on HM8 seeds 0--2. Only the ordering
+objective changes; the TTPI training configuration is fixed.}
+\resizebox{\columnwidth}{!}{\input{tables/prestudy_5080_hybrid}}
+\label{tab:prestudy-5080-hybrid}
+\end{table}
+
+\subsection{Current Experimental Takeaway}
+
+The current data support three conservative claims. First, action-mode ordering
+substantially changes TTPI resource usage under fixed budgets. Second, the
+implemented deterministic coupling-aware block ordering is the most
+promising present main method. Third, static rank-aware cut proxies and naive
+physics--sensitivity hybrids are not sufficient; they should be presented as
+diagnostic ablations unless redesigned. The next full experiment should focus
+on CouplingAwarePAM against Local, BlockPAM, BadSplit, and stress-test
+environments, while reserving HM16 for a higher-memory server.

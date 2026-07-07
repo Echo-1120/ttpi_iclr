@@ -1,34 +1,87 @@
 \section{实验}
 
-本节所有数字都应由仓库产物通过 \path{repro/scripts/sync_paper_artifacts.py} 生成。
+本节数字同步自仓库产物 \path{reports/prestudy_5080/} 与
+\path{results/prestudy_5080/}。当前证据应解释为 RTX 5080 上的可行性与机制预实验，而不是最终全量 benchmark。
 
-\subsection{诊断性冒烟测试}
+\subsection{RTX 5080 预实验协议}
 
-当前上传的 HardMove pilot 应解释为诊断性冒烟测试，而不是最终学习证据。它用于检查日志系统能否暴露 ordering-dependent 的资源行为。在现有 HM8 seed-0 短运行中，bad-split 和 random 排序相比 local 排序提高了峰值显存，同时 reward-side TT-Cross 秩剖面在中部 cut 形成更大的高秩峰。与此同时，四个 pilot 排序的最终 value/advantage 秩摘要尚未拉开差异，且所有 pilot 运行的 success 均为 0。因此，当前证据支持资源敏感性主张，而不支持控制性能提升主张。
+实验固定 TTPI 数值配置，只改变动作模态排序。正式 HardMove 结果采用
+state40/action50/iter30 配置和 seeds 0--9。预实验分析 HM8 与 HM12 标准环境，将
+OOM 作为一类正式结果保留，并记录峰值 GPU 显存、运行时间、TT-Cross 函数求值请求数、逐迭代秩剖面和逐 cut 瞬时秩日志。当前配置下 HM16 不再作为 5080
+上的正式 benchmark，因为现有产物中 150 条 HM16 formal 运行全部 OOM。
+
+\subsection{主资源对比}
+
+表~\ref{tab:prestudy-5080-main-zh} 汇总了已有 HM8/HM12 formal 运行。在 HM8
+上，列出的排序均可完成。下文中的 CouplingAwarePAM 指代码中以
+\texttt{sensitivity\_pam} 实现的确定性分块保留耦合感知排序。CouplingAwarePAM
+的平均成功率最高（0.717），同时显存和 TT-Cross 查询负担接近 BlockPAM。相比之下，静态 RankAwareProxy 虽然在 HM8 不 OOM，但显存升至 5012 MB，查询请求达到 45.16M。
+
+HM12 更清楚地区分了方法。CouplingAwarePAM 的 OOM 数最低（1/10），平均峰值显存最低（9477 MB），平均 TT-Cross 请求数最低（148.80M）。Local 与 BlockPAM
+分别有 3/10 和 4/10 OOM。当前 HybridPAM 在 HM12 上不稳定，7/10 OOM；RankAwareProxy
+在 HM12 的 10 个 seed 上全部 OOM。因此，安全结论不是“rank-aware proxy 已经解决”，而是当前确定性 coupling-aware block ordering 是已实现变体中最有希望的主方法候选。
 
 \begin{table}[t]
 \centering
-\caption{HardMove TTPI 排序消融实验。显存和运行时间越低越好；成功率和 \(\mu\) 指标越高越好。}
-\input{tables/pam_ablation_main}
-\label{tab:pam-main-zh}
+\caption{RTX 5080 HardMove 预实验。OOM 计入失败 seed；success 仅对完成运行取平均。Queries 为 wrapper 统计的 TT-Cross 函数求值请求数。}
+\resizebox{\columnwidth}{!}{\input{tables/prestudy_5080_main}}
+\label{tab:prestudy-5080-main-zh}
 \end{table}
 
-\input{tables/pam_diagnostics_summary}
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.48\linewidth]{HM8_peak_memory_boxplot.png}
+  \includegraphics[width=0.48\linewidth]{HM12_peak_memory_boxplot.png}
+  \caption{RTX 5080 预实验中的峰值 GPU 显存。HM12 暴露了 CouplingAwarePAM 与当前 hybrid/rank-aware proxy 变体之间的实际显存差距。}
+  \label{fig:prestudy-peak-memory-zh}
+\end{figure}
+
+由于 HM12 含有 OOM 运行，不能只看完成运行条件下的成功率。表~\ref{tab:prestudy-5080-operational-zh}
+将完成概率 \(P_{\mathrm{complete}}\)、完成条件成功率 \(S_{\mathrm{cond}}\) 和将 OOM 视为失败的 operational success
+\(S_{\mathrm{e2e}}=P_{\mathrm{complete}}S_{\mathrm{cond}}\) 分开报告。在这一协议下，HybridPAM 只在少数完成 seed 上有可比较的条件成功率，但因 7/10 OOM，operational success 降为 0.167。CouplingAwarePAM 在本预实验中 operational success 最高（0.433），主要原因是它完成了 9/10 个 HM12 seed。
+
+\begin{table}[t]
+\centering
+\caption{HM12 completion-aware performance。条件成功率只在完成运行上计算；operational success 将 OOM 视为失败。}
+\resizebox{\columnwidth}{!}{\input{tables/prestudy_5080_operational}}
+\label{tab:prestudy-5080-operational-zh}
+\end{table}
+
+\subsection{静态 Rank-Aware Proxy 的失败原因}
+
+当前实现的 RankAwareProxy 是静态分段 cut-load 替代目标，而不是动态奇异谱或 TT-Cross 秩估计器。预实验经验上支持这一区分：在 HM8 上它提高显存和查询请求，在 HM12 上 10/10 OOM。当前产物中的 proxy--actual 相关性很弱或不一致，例如与峰值显存的 Pearson 相关在 HM8 为 \(-0.15\)，在 HM12 为 \(-0.01\)。因此，RankAwareProxy
+应作为失败机制消融保留，而不是作为当前主方法。这并不说明 rank-aware ordering 在原则上不可行，而是说明当前静态累计 proxy 与 TTPI 过程中动态出现的瓶颈秩不匹配。
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=0.72\linewidth]{peak_memory_vs_ordering.png}
-  \caption{不同排序下的峰值显存。该图由仓库诊断结果生成，并应在每轮实验后重新生成。}
-  \label{fig:peak-memory-ordering-zh}
+  \includegraphics[width=0.48\linewidth]{static_proxy_vs_peak_memory.png}
+  \includegraphics[width=0.48\linewidth]{rankaware_cutwise_rank_heatmap.png}
+  \caption{静态 proxy 诊断。当前 proxy 不能可靠预测峰值显存，而逐 cut 秩显示了平均目标可能掩盖的瓶颈。}
+  \label{fig:rankaware-failure-zh}
 \end{figure}
 
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=0.72\linewidth]{tt_actual_rank_profile_by_ordering.png}
-  \caption{不同排序下的实际 TT 秩剖面。}
-  \label{fig:actual-rank-profile-zh}
-\end{figure}
+\subsection{Coupling 与 Hybrid 消融}
 
-\subsection{主实验所需证据}
+由于当前 CouplingAwarePAM 分数已经是低成本的确定性角距离 coupling proxy，我们只把两个 empirical action-effect 版本作为预实验候选。表~\ref{tab:prestudy-5080-lite-zh}
+显示二者在 HM8 上代价过高：FD5 相比当前 coupling-aware ordering 几乎翻倍 TT-Cross 请求数，first-order 版本进一步提高显存与秩。因此不建议将二者扩展到 HM12。
 
-主实验套件围绕四条消融轴组织：目标函数选择（LA、peak-cut、rank-aware proxy、spectral cache）、信息源（physics-only、sensitivity-only、hybrid）、结构约束（block-preserving、free permutation、wrong split）和 proxy 精度（spectral cache、segment-coupling proxy、no rank proxy）。压力测试包括原始 HardMove、index-permuted HardMove 和 cross-coupled HardMove。预期主张不是某一个排序在所有指标上都占优，而是奇异谱 proxy、实际 TT 秩剖面和资源指标共同解释何时分块保留秩感知排序能在固定预算下降低 TTPI 负担。
+\begin{table}[t]
+\centering
+\caption{HM8 seeds 0--2 上的低成本 empirical sensitivity 候选。二者均可完成，但秩、显存和查询负担过高，不适合扩展到 HM12。}
+\resizebox{\columnwidth}{!}{\input{tables/prestudy_5080_lite}}
+\label{tab:prestudy-5080-lite-zh}
+\end{table}
+
+表~\ref{tab:prestudy-5080-hybrid-zh} 的 hybrid objective-toggle 消融显示，sensitivity-only
+目标在 HM8 seeds 0--2 上强于当前 50/50 hybrid。它同时获得最低显存、最短运行时间、最低查询数和最高平均成功率。这解释了为什么当前 HybridPAM 应从主方法降级为消融，直到找到更可靠的混合规则。
+
+\begin{table}[t]
+\centering
+\caption{HM8 seeds 0--2 上的 hybrid 目标开关消融。除排序目标外，TTPI 训练配置保持不变。}
+\resizebox{\columnwidth}{!}{\input{tables/prestudy_5080_hybrid}}
+\label{tab:prestudy-5080-hybrid-zh}
+\end{table}
+
+\subsection{当前实验结论}
+
+当前数据支持三条保守结论。第一，固定预算下动作模态排序显著影响 TTPI 资源消耗。第二，当前确定性 coupling-aware block ordering 是最有希望的主方法。第三，静态 rank-aware cut proxy 和朴素 physics--sensitivity hybrid 都不充分；除非重新设计，否则应作为诊断消融呈现。下一轮正式实验应聚焦 CouplingAwarePAM 与 Local、BlockPAM、BadSplit 以及压力测试环境的对比，同时将 HM16 留给更高显存服务器。

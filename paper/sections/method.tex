@@ -3,11 +3,15 @@
 We define physics-aware mode reordering (PAM) as a family of permutations over
 HardMove action modes. The baseline physical layout is
 \([\texttt{acc}_0,\texttt{sw}_0,\texttt{acc}_1,\texttt{sw}_1,\ldots]\). The
-stronger method studied in this paper is block-preserving PAM: each hybrid
-actuator pair \(B_i=[\texttt{acc}_i,\texttt{sw}_i]\) is treated as an atomic
-block, a weighted block graph is built from pairwise coupling scores, and a
-spectral initialization is refined by 2-opt local search. Optional within-block
-flips are allowed only when the pair remains adjacent.
+main method currently supported by the prestudy is a block-preserving
+coupling-aware PAM: each hybrid actuator pair
+\(B_i=[\texttt{acc}_i,\texttt{sw}_i]\) is treated as an atomic block, a weighted
+block graph is built from deterministic structural coupling scores, and a
+spectral initialization is refined by 2-opt local search. In the repository this
+method is implemented under the name \texttt{sensitivity\_pam}; the current
+score is a structural/angular coupling proxy rather than an empirical
+trajectory-sensitivity estimator. Optional within-block flips are allowed only
+when the pair remains adjacent.
 
 For an ordering \(\pi\), let \(\delta_\pi(k)\) denote the edges crossing cut
 \(k\) and define the weighted cut burden
@@ -32,7 +36,9 @@ J_{\mathrm{rank}}(\pi) =
 \end{aligned}
 \end{equation}
 where \(r_k(\pi)\) is estimated either from cached singular spectra or from a
-segment-coupling proxy derived from the cut profile. The repository compares
-local, random, bad-split, opposite-pair, greedy PAM, spectral PAM,
-block-preserving PAM, free PAM, sensitivity-weighted PAM, rank-aware PAM, and
-hybrid objectives under one manifest-driven runner.
+segment-coupling proxy derived from the cut profile. In the current evidence
+set, this static proxy is retained as a diagnostic ablation rather than as the
+main method, because it does not reliably predict dynamic TT-Cross burden. The
+repository compares local, random, bad-split, opposite-pair, greedy PAM,
+spectral PAM, block-preserving PAM, free PAM, coupling-aware PAM,
+rank-aware-proxy PAM, and hybrid objectives under one manifest-driven runner.

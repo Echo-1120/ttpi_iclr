@@ -10,12 +10,12 @@
 \usepackage{xcolor}
 \usepackage{hyperref}
 
-\graphicspath{{figures/}{../repro/figures/pam_diagnostics/}{../repro/figures/hardmove/}}
+\graphicspath{{figures/}{../repro/figures/pam_diagnostics/}{../repro/figures/hardmove/}{../reports/prestudy_5080/main_comparison/}{../reports/prestudy_5080/rankaware_failure/}}
 
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 
-\title{Rank-Aware, Block-Preserving Mode Reordering for Tensor-Train Policy Iteration}
+\title{Mode Ordering Matters in Tensor-Train Policy Iteration: Block-Preserving Coupling-Aware Reordering}
 
 \author{\IEEEauthorblockN{Anonymous Authors}
 \IEEEauthorblockA{\textit{Anonymous Institution}\\
@@ -29,19 +29,21 @@ anonymous@example.com}}
 \maketitle
 
 \begin{abstract}
-Tensor-train policy iteration (TTPI) makes hybrid control tractable by replacing
-full state-action tensors with low-rank tensor trains, but its cost remains
-sensitive to the ranks induced by sequential tensor unfoldings. This paper
-studies action-mode ordering as an explicit algorithmic variable in TTPI. We
-argue that physics-aware adjacency is a useful prior but not a sufficient
-objective: weighted linear arrangement measures cumulative cut burden, whereas
-peak memory and TT-Cross workload are driven by cut-level rank bottlenecks. We
-therefore formulate block-preserving and rank-aware mode reordering objectives
-for hybrid actuator pairs, together with diagnostics that record TT-Cross query
-requests, transient rank profiles, memory, runtime, and singular-spectrum
-proxies. The current repository-synchronized results support a resource
-sensitivity claim and define the evidence required before making stronger
-control-performance claims.
+Tensor-train policy iteration (TTPI) represents high-dimensional hybrid
+state-action functions through sequential low-rank factorizations. Although
+permuting action variables preserves the underlying joint action space, it
+changes TT unfoldings and can substantially alter TT-Cross workload, peak
+memory, and out-of-memory behavior. This paper studies action-mode ordering as a
+first-class algorithmic variable in TTPI. We introduce a deterministic
+block-preserving coupling-aware ordering strategy that keeps the continuous and
+discrete variables of each actuator adjacent while arranging actuator blocks by
+structural coupling. We evaluate orderings with diagnostics for TT-Cross query
+requests, transient cut-rank profiles, memory, runtime, completion probability,
+and completed-run control performance. Current RTX 5080 prestudy results on
+HardMove HM8/HM12 indicate that the coupling-aware ordering implemented as
+\texttt{sensitivity\_pam} provides the most stable resource profile among the
+tested candidates, whereas a static cumulative rank proxy and a naive
+physics--sensitivity mixture do not reliably predict dynamic TT-Cross burden.
 \end{abstract}
 
 \begin{IEEEkeywords}
